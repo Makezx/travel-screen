@@ -2,7 +2,7 @@
 
 **English** | [中文](README.md)
 
-![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![Release](https://img.shields.io/github/v/release/Makezx/travel-screen?label=release&color=blue) ![Stars](https://img.shields.io/github/stars/Makezx/travel-screen?style=flat&color=yellow) ![Build](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![Release](https://img.shields.io/github/v/release/Makezx/travel-screen?label=release&color=blue) ![Stars](https://img.shields.io/github/stars/Makezx/travel-screen?style=flat&color=yellow) ![Docker Pulls](https://img.shields.io/docker/pulls/lookupstarts/travel-screen?label=docker%20pulls&color=blue) ![Build](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
 
 A personal **travel footprint & expense dashboard** built with Spring Boot and ECharts: a 3D flight-line map of China, spending breakdown, yearly footprint, cost rankings, travel companions, photo wall, and AI trip planning.
 
@@ -94,9 +94,22 @@ AI planning is disabled by default. Set `AI_API_KEY` (Zhipu GLM) to enable it:
 AI_API_KEY=sk-xxx java -jar target/travel-screen.jar
 ```
 
-### Docker (one command)
+### Docker
 
-No JDK 21 / Maven on your machine? With Docker installed, one command is enough:
+No JDK 21 / Maven on your machine? With Docker installed, pick either route.
+
+**Option A — use the published image (fastest, no build step)**
+
+```bash
+docker run -d --name travel-screen -p 8388:8388 \
+  -v travel-screen-data:/app/data -v travel-screen-photos:/app/photos \
+  lookupstarts/travel-screen:latest
+```
+
+The image is **multi-arch** (`linux/amd64` + `linux/arm64`), so it runs natively on Apple Silicon.
+Pin the version by replacing `latest` with `1.0.0`.
+
+**Option B — build from source**
 
 ```bash
 # 1. Build and start in the background (first build downloads deps, ~3-8 min; later starts are seconds)

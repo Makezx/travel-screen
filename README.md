@@ -2,7 +2,7 @@
 
 [English](README_EN.md) | 中文
 
-![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![Release](https://img.shields.io/github/v/release/Makezx/travel-screen?label=release&color=blue) ![Stars](https://img.shields.io/github/stars/Makezx/travel-screen?style=flat&color=yellow) ![CI](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![Release](https://img.shields.io/github/v/release/Makezx/travel-screen?label=release&color=blue) ![Stars](https://img.shields.io/github/stars/Makezx/travel-screen?style=flat&color=yellow) ![Docker Pulls](https://img.shields.io/docker/pulls/lookupstarts/travel-screen?label=docker%20pulls&color=blue) ![CI](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
 
 一个用 Spring Boot + ECharts 做的**个人旅行足迹可视化大屏**：中国地图 3D 飞线、消费结构、年度足迹、花费排行、同行伙伴、照片墙、AI 行程规划。单文件前端、零外链、纯本地渲染（中国边界数据来自阿里云 DataV GeoAtlas，合规含台湾省与十段线）。
 
@@ -84,9 +84,22 @@ AI 行程规划默认未配置 Key；设置环境变量 `AI_API_KEY`（智谱 GL
 AI_API_KEY=sk-xxx java -jar target/travel-screen.jar
 ```
 
-## 快速开始（Docker 一键启动）
+## 快速开始（Docker）
 
-不想在本机装 JDK 21 + Maven？装了 Docker 的话，一条命令就能跑起来：
+不想在本机装 JDK 21 + Maven？装了 Docker 的话，两条路任选。
+
+### 方式 A：直接用已发布的镜像（最快，零编译）
+
+```bash
+docker run -d --name travel-screen -p 8388:8388 \
+  -v travel-screen-data:/app/data -v travel-screen-photos:/app/photos \
+  lookupstarts/travel-screen:latest
+```
+
+镜像为**多架构**（`linux/amd64` + `linux/arm64`），Apple Silicon 上原生运行、不用转译。
+想锁版本就把 `latest` 换成 `1.0.0`。
+
+### 方式 B：从源码构建
 
 ```bash
 # 1. 构建并后台启动（首次会下载依赖并编译，约 3～8 分钟；之后启动是秒级）
