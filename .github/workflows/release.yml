@@ -108,25 +108,30 @@ jobs:
 
       # 手写 gh 脚本曾出现"步骤成功但 release 并不存在"的情况（拿不到日志，无法定位）。
       # 这一层校验把静默成功变成显式失败，避免再发一次空版本。
+      # 注意：必须显式给 --repo / GH_REPO，gh 在 Actions 里不保证能自行推断仓库。
       - name: Verify the release is actually published
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           TAG="${{ steps.ver.outputs.tag }}"
-          for i in $(seq 1 10); do
-            if gh release view "$TAG" >/dev/null 2>&1; then
-              echo "校验通过：release $TAG 已发布"
-              gh release view "$TAG" --json tagName,isDraft,isLatest,url,assets \
-                --template '{{.tagName}} draft={{.isDraft}} latest={{.isLatest}}{{"\n"}}{{.url}}{{"\n"}}assets: {{range .assets}}{{.name}} ({{.size}}B) {{end}}{{"\n"}}'
-              exit 0
+          ok=""
+          for i in $(seq 1 20); do
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              ok=1
+              break
             fi
-            echo "第 $i 次未见 release，3 秒后重试…"
-            sleep 3
+            echo "第 $i 次未见 release，5 秒后重试…"
+            sleep 5
           done
-          echo "::error::release $TAG 未创建成功——发布流程无效"
-          echo "当前 release 列表："
-          gh release list || true
-          exit 1
+          if [ -z "$ok" ]; then
+            echo "::error::release $TAG 未创建成功——发布流程无效"
+            echo "当前 release 列表："
+            gh release list --repo "$GITHUB_REPOSITORY" || true
+            exit 1
+          fi
+          echo "校验通过：release $TAG 已发布"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY"
 
       - name: Summary
         run: |
