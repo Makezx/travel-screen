@@ -71,10 +71,9 @@ jobs:
           echo "启动失败，日志尾部："; tail -60 /tmp/boot.log; exit 1
 
       - name: Compose release notes
-        id: notes
         run: |
           TAG="${{ steps.ver.outputs.tag }}"
-          NOTES=/tmp/release-notes.md
+          NOTES="$RUNNER_TEMP/release-notes.md"
           if [ -f "release-notes/${TAG}.md" ]; then
             cp "release-notes/${TAG}.md" "$NOTES"
             echo "使用策展说明：release-notes/${TAG}.md"
@@ -91,19 +90,22 @@ jobs:
             printf '\n---\n\n**全部提交**：https://github.com/%s/commits/%s\n' \
               "$GITHUB_REPOSITORY" "$TAG" >> "$NOTES"
           fi
-          echo "file=$NOTES" >> "$GITHUB_OUTPUT"
+          echo "----- 生成的发布说明（$NOTES）-----"
+          wc -l "$NOTES"
+          head -12 "$NOTES"
 
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -x
           TAG="${{ steps.ver.outputs.tag }}"
           JAR="${{ steps.ver.outputs.jar }}"
-          NOTES="${{ steps.notes.outputs.file }}"
-          # 幂等：release 已存在就更新说明并覆盖附件，避免重跑时 "release already exists" 失败
+          NOTES="$RUNNER_TEMP/release-notes.md"
+          ls -la "$JAR" "$NOTES"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "release $TAG 已存在，改为更新"
-            gh release edit "$TAG" --title "$TAG" --notes-file "$NOTES" --latest
+            gh release edit "$TAG" --title "$TAG" --notes-file "$NOTES"
             gh release upload "$TAG" "$JAR" --clobber
           else
             gh release create "$TAG" "$JAR" --title "$TAG" --notes-file "$NOTES" --latest
