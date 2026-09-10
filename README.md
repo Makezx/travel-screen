@@ -48,6 +48,9 @@
 
 - 后端：Spring Boot 3.3.5 + Java 21 + JPA/Hibernate
 - 前端：单文件 HTML（`src/main/resources/static/index.html`），原生 JS + ECharts 5.5.1 + echarts-gl 2.0.9
+- 地图：**离线内嵌矢量底图**，覆盖全国 369 个地级市 + 34 个省级行政区 + 南海诸岛十段线。
+  无地图瓦片、无 API Key、无任何外链资源；底图由独立端点 `GET /api/geo` 提供并缓存一天，
+  与行程数据（`GET /api/screen-data`）解耦
 - 存储：本地 H2 文件库（默认）；生产可切 MySQL（prod profile）
 - 构建：Maven
 

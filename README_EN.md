@@ -48,7 +48,7 @@ All screenshots are rendered from a local H2 instance seeded with the anonymized
 
 ## Features
 
-- **2D + 3D map**: province-level China map with route flight lines; toggle a 3D extruded map (echarts-gl `geo3D`) with city light pillars and animated flight lines.
+- **2D + 3D map**: 2D city-level China map (369 prefecture-level cities light up as you record trips) with route flight lines; toggle a 3D extruded province map (echarts-gl `geo3D`) with city light pillars and animated flight lines.
 - **Excel-style maintenance**: inline editing of trips and line items, xlsx import / export.
 - **AA bill splitting**: per-expense participant selection, cent-exact remainder distribution, and a greedy minimum-transfer settlement.
 - **Roles & permissions**: activities with `OWNER / CO_OWNER / EDITOR / MEMBER` roles, plus team and system-level permissions.
@@ -60,6 +60,7 @@ All screenshots are rendered from a local H2 instance seeded with the anonymized
 
 - Backend: Spring Boot 3.3.5 + Java 21 + JPA/Hibernate
 - Frontend: single-file HTML (`src/main/resources/static/index.html`), vanilla JS + ECharts 5.5.1 + echarts-gl 2.0.9
+- Map: **bundled offline vector basemap** covering all 369 prefecture-level cities of China, 34 province-level regions and the South China Sea islands / nine-dash line. No map tiles, no API key, no external assets. Served from a dedicated cached endpoint `GET /api/geo`, decoupled from trip data (`GET /api/screen-data`)
 - Storage: local H2 file database (default); MySQL available via the `prod` profile
 - Build: Maven
 
