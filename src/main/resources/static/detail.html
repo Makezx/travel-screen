@@ -160,7 +160,10 @@ function renderList(){
 }
 async function init(){
   var r=await fetch('/api/screen-data');if(r.status===401){location.href='/login';return;}
-  D=await r.json();TRIPS=D.trips;GEO=D.geo;LIT=D.lit;
+  D=await r.json();TRIPS=D.trips;LIT=D.lit;
+  // 底图改由 /api/geo 下发（独立端点 + 按天缓存），不再随 screen-data 整包重传
+  try{GEO=D.geo||await (await fetch('/api/geo')).json();}
+  catch(e){$('list').innerHTML='<div style="padding:20px;color:#ff5fa2">底图加载失败：'+e+'</div>';return;}
   // 账号/退出
   fetch('/api/me').then(function(rr){return rr.ok?rr.json():null;}).then(function(me){if(me)$('u').innerHTML='<span class="un">'+esc(me.avatar||'👤')+' '+esc(me.codename||me.displayName||me.username)+'</span><a href="/profile">个人</a><a class="out" href="/logout">退出</a>';});
   // 年份下拉

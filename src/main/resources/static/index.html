@@ -413,7 +413,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function shortC(full){return String(full||'').replace(/市$/,'').replace(/地区$/,'').replace(/自治州$/,'').replace(/盟$/,'').replace(/特别行政区$/,'').trim();}
 // 已点亮/到访城市简称列表（供画地名用）
 function litCityNames(){var arr=[],seen={},k,st;
-  for(k in LIT){if(!LIT.hasOwnProperty(k))continue;st=LIT[k];if(!st)continue;var s=shortC(st.n);if(!s||seen[s])continue;seen[s]=1;arr.push(s);}
+  for(k in LIT){if(!LIT.hasOwnProperty(k))continue;st=LIT[k];if(!st)continue;var s=st.sn||shortC(st.n);if(!s||seen[s])continue;seen[s]=1;arr.push(s);}
   return arr;}
 function money(n){n=Number(n)||0;return '¥'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function money0(n){n=Math.round(Number(n)||0);return '¥'+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
@@ -647,7 +647,7 @@ function bindMap(){
   wrap.addEventListener('mousemove',function(e){var el=e.target;if(!el||!el.getAttribute){tip.style.display='none';return;}
     var a=el.getAttribute('data-a');if(!a){tip.style.display='none';return;}var st=LIT[a],c=CITY_AD[a];if(!st){tip.style.display='none';return;}
     var names=st.t.map(function(id){for(var i=0;i<TRIPS.length;i++)if(TRIPS[i].id===id)return TRIPS[i].title;return '';}).filter(Boolean);
-    tip.innerHTML='<b>'+esc(st.n)+'</b>　到访 <b>'+st.v+'</b> 次<div class="m">分摊花费 '+money0(st.s)+'</div><div class="m">'+esc(names.slice(0,4).join('、'))+(names.length>4?' 等 '+names.length+' 程':'')+'</div>';
+    tip.innerHTML='<b>'+esc(st.sn||st.n)+'</b>　到访 <b>'+st.v+'</b> 次<div class="m">分摊花费 '+money0(st.s)+'</div><div class="m">'+esc(names.slice(0,4).join('、'))+(names.length>4?' 等 '+names.length+' 程':'')+'</div>';
     var r=wrap.getBoundingClientRect();var x=e.clientX-r.left+16,y=e.clientY-r.top+14;if(x>r.width-260)x=e.clientX-r.left-256;if(y>r.height-90)y=e.clientY-r.top-86;tip.style.left=x+'px';tip.style.top=y+'px';tip.style.display='block';});
   wrap.addEventListener('mouseleave',function(){tip.style.display='none';});
   wrap.addEventListener('click',function(e){var a=e.target&&e.target.getAttribute?e.target.getAttribute('data-a'):null;if(!a)return;var st=LIT[a];if(!st||!st.t.length)return;
@@ -671,9 +671,25 @@ function loadTeamsForSelect(remembered){
   });
 }
 
+/* 底图：独立端点 + 客户端缓存。
+   底图与行程/团队无关（369 个地级市，约 1MB），以前每次 /api/screen-data 都整包重传，
+   切一次活动就多拉约 1MB。现在首次真正下载，之后命中内存缓存（并由 /api/geo 的
+   Cache-Control 让浏览器也缓存一天）。 */
+var GEO_P=null,GEO_C=null;
+function loadGeo(){
+  if(GEO_C)return Promise.resolve(GEO_C);
+  if(!GEO_P){
+    GEO_P=fetch('/api/geo').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+      .then(function(g){GEO_C=g;return g;});
+  }
+  return GEO_P;
+}
+
 function applyScreenData(d){
-  D=d;TRIPS=d.trips;PEOPLE=d.people;LIT=d.lit;ST=d.stat;GEO=d.geo;NEXT=d.nextup;
+  D=d;TRIPS=d.trips;PEOPLE=d.people;LIT=d.lit;ST=d.stat;NEXT=d.nextup;
   S.isMock=!!d.mock;
+  loadGeo().then(function(g){
+  GEO=d.geo||g; // 兼容：若载荷仍自带 geo 则优先用它，否则用 /api/geo
   initProj();buildBase();
   SEQ=TRIPS.filter(function(t){return t.status==='done'&&(t.path||[]).length>1;});if(!SEQ.length)SEQ=TRIPS.slice();
   S.sel=null;S.drawer=false;S.allLit=false;S.allRoutes=true;S.lgOpen=false;
@@ -681,6 +697,7 @@ function applyScreenData(d){
   $('btnAll').classList.remove('act');$('btnRoutes').classList.add('act');$('btnRoutes').textContent='🛤 全部路线';
   syncPlay();applyLegend();refreshAll();
   sync3dAfterData(); // 3D 模式下按新数据重建光柱/照片索引
+  }).catch(function(e){toast2('底图加载失败，地图无法绘制：'+e);});
 }
 
 function switchTeam(teamId){
@@ -925,7 +942,7 @@ function cityPillars(){
   for(a in LIT){
     if(!LIT.hasOwnProperty(a))continue;st=LIT[a];
     if(!st||!st.n)continue;
-    nm=shortC(st.n);if(seen[nm])continue;
+    nm=st.sn||shortC(st.n);if(seen[nm])continue;
     xy=coordOf(nm);if(!xy)continue; // 查不到坐标的城市：不画光柱、不报错
     seen[nm]=1;
     arr.push({name:nm,lng:xy[0],lat:xy[1],spend:Number(st.s)||0,visits:st.v||1});
@@ -1082,8 +1099,9 @@ async function init(){
     if(resp.status===401){location.href='/login';return;}
     D=await resp.json();
   }catch(e){document.body.innerHTML='<div style="padding:40px;color:#ff5fa2">数据加载失败：'+e+'</div>';return;}
-  TRIPS=D.trips;PEOPLE=D.people;LIT=D.lit;ST=D.stat;GEO=D.geo;NEXT=D.nextup;
+  TRIPS=D.trips;PEOPLE=D.people;LIT=D.lit;ST=D.stat;NEXT=D.nextup;
   S.isMock=!!D.mock;
+  try{GEO=D.geo||await loadGeo();}catch(e){document.body.innerHTML='<div style="padding:40px;color:#ff5fa2">底图加载失败：'+e+'</div>';return;}
   initProj();buildBase();
   SEQ=TRIPS.filter(function(t){return t.status==='done'&&(t.path||[]).length>1;});if(!SEQ.length)SEQ=TRIPS.slice();
   bindTop();bindMap();syncPlay();refreshAll();tickClock();applyVisibility();startTourTimer();

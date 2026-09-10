@@ -49,9 +49,11 @@ public class AuthFilter implements Filter {
         String method = req.getMethod();
 
         // 公开资源（/photos/** 为行程照片静态目录，游客在大屏要能看照片；/api/teams 需登录：团队选择仅登录后可用）
+        // /api/geo 为纯地理底图（无行程隐私），公开 + 按天缓存，供游客大屏与登录用户共用
         if (path.equals("/health") || path.equals("/api/health")
                 || path.equals("/login") || path.equals("/logout")
                 || path.equals("/") || path.equals("/api/screen-data")
+                || path.equals("/api/geo")
                 || path.startsWith("/photos/")
                 || (method.equals("POST") && path.equals("/api/login"))
                 || isStatic(path)) {

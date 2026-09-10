@@ -2,6 +2,7 @@ package com.laofei.travel.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.laofei.travel.model.Team;
 import com.laofei.travel.model.Trip;
 import com.laofei.travel.model.TripPhoto;
@@ -65,6 +66,9 @@ public class ScreenDataService {
                 long a = c.get("a").asLong();
                 String full = c.get("n").asText();
                 nameToAdcode.put(shortName(full), a);
+                // 追加民族自治州的自然写法（恩施/阿坝/延边/海西…）。
+                // 只 putIfAbsent，不动上面那个精确 key —— 存量数据里两种写法都能解析。
+                nameToAdcode.putIfAbsent(aliasName(full), a);
                 adcodeName.put(a, full);
                 JsonNode cc = c.get("c");
                 if (cc != null && cc.size() >= 2) {
@@ -87,6 +91,48 @@ public class ScreenDataService {
     private static String shortName(String full) {
         return full.replace("市", "").replace("地区", "").replace("自治州", "")
                 .replace("盟", "").replace("特别行政区", "").trim();
+    }
+
+    /**
+     * 民族名清单，用于把自治州的自然写法还原出来。
+     * 注意：不能用正则 {@code (?:[\u4e00-\u9fa5]{1,3}族)+$} —— 它取最左匹配，
+     * "海西蒙古族藏族" 会被剥成 "海"（应为 "海西"）。这里用显式表逐个从尾部剥离，行为可控。
+     */
+    private static final String[] ETHNIC_NAMES = {
+            "维吾尔", "柯尔克孜", "乌孜别克", "哈萨克", "塔吉克", "俄罗斯", "鄂温克", "达斡尔", "鄂伦春",
+            "土家", "苗族", "藏族", "羌族", "彝族", "白族", "傣族", "景颇", "傈僳", "回族", "蒙古",
+            "朝鲜", "布依", "侗族", "黎族", "哈尼", "壮族", "瑶族", "畲族", "水族", "仡佬", "拉祜",
+            "佤族", "纳西", "德昂", "阿昌", "普米", "怒族", "独龙", "基诺", "门巴", "珞巴", "布朗",
+            "撒拉", "毛南", "京族", "赫哲", "高山", "保安", "裕固", "土族", "满族", "锡伯", "仫佬", "东乡"
+    };
+
+    /**
+     * 城市别称：在 shortName 基础上继续剥掉尾部民族名。
+     * 恩施土家族苗族自治州 → 恩施；海西蒙古族藏族自治州 → 海西；大理白族自治州 → 大理。
+     * 用户实际记城市很少写全称，这一步让「恩施」「阿坝」「延边」这类输入也能点亮。
+     */
+    private static String aliasName(String full) {
+        String s = shortName(full);
+        boolean stripped = true;
+        while (stripped) {
+            stripped = false;
+            for (String e : ETHNIC_NAMES) {
+                // 官方名里民族既可能带「族」也可能不带：海西蒙古族藏族自治州 / 博尔塔拉蒙古自治州、
+                // 伊犁哈萨克自治州。带「族」的先试，再试裸写法，避免把「蒙古族」误剥成「蒙古」后残留。
+                String[] toks = e.endsWith("族") ? new String[]{e} : new String[]{e + "族", e};
+                boolean hit = false;
+                for (String tok : toks) {
+                    if (s.length() > tok.length() && s.endsWith(tok)) {
+                        s = s.substring(0, s.length() - tok.length());
+                        stripped = true;
+                        hit = true;
+                        break;
+                    }
+                }
+                if (hit) break;
+            }
+        }
+        return s;
     }
 
     private static double r2(double v) {
@@ -239,11 +285,9 @@ public class ScreenDataService {
                 for (Long ad : tripAdcodes) {
                     Map<String, Object> m = lit.computeIfAbsent(ad, k -> {
                         Map<String, Object> nm = new LinkedHashMap<>();
-                        nm.put("n", adcodeName.getOrDefault(k, String.valueOf(k)));
-                        double[] xy = null;
-                        for (Map.Entry<String, double[]> e : cityCoords.entrySet()) {
-                            // 反查坐标：用 adcodeName 简称匹配
-                        }
+                        String full = adcodeName.getOrDefault(k, String.valueOf(k));
+                        nm.put("n", full);
+                        nm.put("sn", aliasName(full)); // 显示用短名：恩施土家族苗族自治州 -> 恩施
                         nm.put("c", null);
                         nm.put("v", 0); nm.put("s", 0.0); nm.put("t", new ArrayList<String>());
                         return nm;
@@ -296,11 +340,9 @@ public class ScreenDataService {
             litByName.put(String.valueOf(ad), m);
         }
 
-        // citiesXY
-        Map<String, double[]> citiesXY = new LinkedHashMap<>();
-        for (Map.Entry<String, double[]> e : cityCoords.entrySet()) {
-            citiesXY.put(e.getKey(), new double[]{e.getValue()[0], e.getValue()[1]}); // [lat,lng]
-        }
+        // citiesXY：城市名字标签用。覆盖全部地级市（geo 中心点兜底），
+        // 否则新解析出的城市能点亮、能连线，却画不出名字标签。
+        Map<String, double[]> citiesXY = buildCityXY(); // [lat,lng]
 
         // people 收尾
         List<Map<String, Object>> peopleOut = new ArrayList<>();
@@ -363,7 +405,8 @@ public class ScreenDataService {
         out.put("unresolvedCities", new ArrayList<>(unresolved)); // geo 底图未覆盖的城市（前端给轻量提示）
         out.put("people", peopleOut);
         out.put("citiesXY", citiesXY);
-        out.put("geo", geoNode);
+        // 注意：底图不再塞进本响应体。底图随行程数无关，且已扩到 369 个地级市（约 1MB），
+        // 每次切活动/团队都重传纯属浪费。改由 GET /api/geo 单独下发 + 客户端按天缓存。
         out.put("lit", litByName);
         out.put("stat", stat);
         out.put("nextup", nextup);
@@ -498,7 +541,9 @@ public class ScreenDataService {
                 for (Long ad : tripAdcodes) {
                     Map<String, Object> m = lit.computeIfAbsent(ad, k -> {
                         Map<String, Object> nm = new LinkedHashMap<>();
-                        nm.put("n", adcodeName.getOrDefault(k, String.valueOf(k)));
+                        String full = adcodeName.getOrDefault(k, String.valueOf(k));
+                        nm.put("n", full);
+                        nm.put("sn", aliasName(full)); // 显示用短名，与真实路径保持一致
                         nm.put("c", null); nm.put("v", 0); nm.put("s", 0.0); nm.put("t", new ArrayList<String>());
                         return nm;
                     });
@@ -540,31 +585,9 @@ public class ScreenDataService {
         // 仅输出 mock 涉及城市，避免泄露真实到访城市集合
         Set<String> mockCities = new LinkedHashSet<>();
         for (Map<String, Object> t : tripsOut) mockCities.addAll((List<String>) t.get("cities"));
-        cityCoords.forEach((k, v) -> {
-            if (mockCities.contains(k)) citiesXY.put(k, new double[]{v[0], v[1]});
+        buildCityXY().forEach((k, v) -> {
+            if (mockCities.contains(k)) citiesXY.put(k, v);
         });
-        // geo：省份边界保留（底图必需），cities / place2adcode 仅保留 mock 城市
-        List<Map<String, Object>> mockGeoCities = new ArrayList<>();
-        Map<String, Long> mockP2a = new LinkedHashMap<>();
-        if (geoNode != null) {
-            JsonNode gc = geoNode.get("cities");
-            if (gc != null) {
-                for (JsonNode c : gc) {
-                    if (mockCities.contains(shortName(c.get("n").asText()))) {
-                        Map<String, Object> cm = new LinkedHashMap<>();
-                        cm.put("a", c.get("a").asLong());
-                        cm.put("n", c.get("n").asText());
-                        mockGeoCities.add(cm);
-                    }
-                }
-            }
-            JsonNode p2a = geoNode.get("place2adcode");
-            if (p2a != null) {
-                p2a.fields().forEachRemaining(e -> {
-                    if (mockCities.contains(e.getKey())) mockP2a.put(e.getKey(), e.getValue().asLong());
-                });
-            }
-        }
 
         List<Map<String, Object>> peopleOut = new ArrayList<>();
         for (Map<String, Object> e : personAgg.values()) {
@@ -613,12 +636,6 @@ public class ScreenDataService {
             nextup.add(m);
         }
 
-        Map<String, Object> mockGeo = new LinkedHashMap<>();
-        // 底图（provinces/cities 含多边形）完整保留——地理底图本身无行程隐私；
-        // 仅裁剪 place2adcode（含真实到访点位映射）以免泄露真实城市。lit/citiesXY 已限 mock 城市。
-        mockGeo.put("provinces", geoNode == null ? List.of() : geoNode.get("provinces"));
-        mockGeo.put("cities", geoNode == null ? List.of() : geoNode.get("cities"));
-        mockGeo.put("place2adcode", mockP2a);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("mock", true);
         out.put("trips", tripsOut);
@@ -626,7 +643,7 @@ public class ScreenDataService {
         out.put("unresolvedCities", List.of());
         out.put("people", peopleOut);
         out.put("citiesXY", citiesXY);
-        out.put("geo", mockGeo);
+        // 底图同样由 GET /api/geo 下发（公开地理数据，无行程隐私）
         out.put("lit", litByName);
         out.put("stat", stat);
         out.put("nextup", nextup);
@@ -640,6 +657,37 @@ public class ScreenDataService {
         double[] xy = cityCoords.get(shortName(full));
         if (xy != null) return xy;
         return adcodeCenter.get(adcode);
+    }
+
+    /**
+     * 全部地级市坐标表：key=城市简称，value=[lat,lng]。
+     * geo 自带的城市中心点打底（覆盖 369 个市），city-coords.json 的人工微调值优先覆盖
+     * （千岛湖/武功山/喀纳斯这类非行政区点位，以及个别需要手工校正的市级坐标）。
+     */
+    private Map<String, double[]> buildCityXY() {
+        Map<String, double[]> m = new LinkedHashMap<>();
+        adcodeName.forEach((a, full) -> {
+            double[] ctr = adcodeCenter.get(a);
+            if (ctr == null) return;
+            double[] v = new double[]{ctr[0], ctr[1]};
+            m.put(shortName(full), v);
+            m.putIfAbsent(aliasName(full), v); // 自然写法（恩施/阿坝/延边…）也要能查到
+        });
+        m.putAll(cityCoords); // 人工微调优先
+        return m;
+    }
+
+    /**
+     * 公开底图：省份边界 + 地级市多边形。
+     * 刻意【不】含 place2adcode —— 它是「景区/县 -> 所属市」的别名表，
+     * 内容来自真实行程（千岛湖、武功山…），对外等同于泄露作者去过哪些地方。
+     * 前端也从不读它，故只服务端内部使用。
+     */
+    public JsonNode publicGeo() {
+        ObjectNode o = om.createObjectNode();
+        o.set("provinces", geoNode == null ? om.createArrayNode() : geoNode.get("provinces"));
+        o.set("cities", geoNode == null ? om.createArrayNode() : geoNode.get("cities"));
+        return o;
     }
 
     private static List<String> asList(String json) {
