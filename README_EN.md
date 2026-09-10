@@ -130,6 +130,31 @@ Notes:
     --name travel-screen travel-screen:latest
   ```
 
+### Publish your own image to Docker Hub (optional)
+
+The repo ships `.github/workflows/docker.yml`: **publishing a Release builds and pushes a multi-arch image (`linux/amd64` + `linux/arm64`) to Docker Hub.**
+
+Two repository secrets are required (**Settings → Secrets and variables → Actions → New repository secret**):
+
+| Secret | Value |
+|---|---|
+| `DOCKERHUB_USERNAME` | Your Docker Hub username (**not** your email) |
+| `DOCKERHUB_TOKEN` | A Docker Hub personal access token with **Read & Write** permission |
+
+To create the token: sign in to [Docker Hub](https://hub.docker.com) → avatar (top right) → **Account settings** → **Personal access tokens** → **Generate new token** → add a description and expiry, tick `Read & Write` → **Generate**. ⚠️ The token is shown only once — save it immediately.
+
+> **Never paste the token into code, issues or chat.** Put it in the repository secrets; the workflow reads it via `secrets.*` and it never appears in logs.
+
+Without the secrets the workflow skips itself silently (no failure). The first push creates the `travel-screen` repository automatically; if it reports a permission error, create an empty repository with that name on Docker Hub first.
+
+Once published, anyone can run:
+
+```bash
+docker run -d -p 8388:8388 \
+  -v travel-screen-data:/app/data -v travel-screen-photos:/app/photos \
+  --name travel-screen <your-username>/travel-screen:latest
+```
+
 ## Configuration (environment variables; defaults in `application.yml`)
 
 | Variable | Description |

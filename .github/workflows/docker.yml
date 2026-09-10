@@ -1,0 +1,99 @@
+name: Docker
+
+# 发布镜像到 Docker Hub，方便 `docker search` / `docker run` 直接找到并拉取。
+#
+# 触发：推 v* tag（与 Release 工作流并行跑）；也可以在 Actions 页面手动触发。
+# ⚠️ 这里故意监听 tag push 而不是 release:published —— release 是由 Release 工作流
+#    用 GITHUB_TOKEN 创建的，而 GitHub 不会让 GITHUB_TOKEN 产生的动作再去触发其他
+#    工作流（防递归），所以 release:published 永远等不到事件。
+#
+# 需要的仓库密钥（Settings → Secrets and variables → Actions）：
+#   DOCKERHUB_USERNAME  Docker Hub 用户名（不是邮箱）
+#   DOCKERHUB_TOKEN     Docker Hub 个人访问令牌（Read & Write）
+# 未配置时本工作流会直接跳过（绿色），不会产生失败告警。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build & Push multi-arch image
+    runs-on: ubuntu-latest
+
+    steps:
+      # 先探密钥。没配就整体跳过，避免仓库里长期挂一个红叉。
+      - name: Check Docker Hub credentials
+        id: creds
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DH_USER" ] && [ -n "$DH_TOKEN" ]; then
+            echo "ready=1" >> "$GITHUB_OUTPUT"
+            echo "密钥已配置，将发布镜像到 $DH_USER/travel-screen"
+          else
+            echo "ready=0" >> "$GITHUB_OUTPUT"
+            echo "::notice::未配置 DOCKERHUB_USERNAME / DOCKERHUB_TOKEN，跳过镜像发布。配置方式见 README 的「发布到 Docker Hub」一节。"
+          fi
+
+      - name: Checkout
+        if: steps.creds.outputs.ready == '1'
+        uses: actions/checkout@v4
+
+      # QEMU 让 amd64 runner 也能构建 arm64 镜像（Apple Silicon 上免转译运行）
+      - name: Set up QEMU
+        if: steps.creds.outputs.ready == '1'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        if: steps.creds.outputs.ready == '1'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: steps.creds.outputs.ready == '1'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Derive image tags and labels
+        if: steps.creds.outputs.ready == '1'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/travel-screen
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+
+      - name: Build and push
+        if: steps.creds.outputs.ready == '1'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        if: steps.creds.outputs.ready == '1'
+        run: |
+          {
+            echo "### 镜像已发布"
+            echo ""
+            echo "\`\`\`"
+            echo "${{ steps.meta.outputs.tags }}"
+            echo "\`\`\`"
+            echo ""
+            echo "平台：linux/amd64, linux/arm64"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -118,6 +118,32 @@ docker compose down          # 停止并移除容器，数据卷保留
   docker run -d -p 8388:8388 -v travel-screen-data:/app/data -v travel-screen-photos:/app/photos --name travel-screen travel-screen:latest
   ```
 
+### 发布自己的镜像到 Docker Hub（可选）
+
+仓库自带 `.github/workflows/docker.yml`：**发布 Release 时会自动构建 `linux/amd64` + `linux/arm64` 双架构镜像并推送到 Docker Hub**。
+
+用之前需要在仓库里配两个密钥（**Settings → Secrets and variables → Actions → New repository secret**）：
+
+| 密钥名 | 值 |
+|---|---|
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名（**不是邮箱**） |
+| `DOCKERHUB_TOKEN` | Docker Hub 个人访问令牌，权限选 **Read & Write** |
+
+令牌获取：登录 [Docker Hub](https://hub.docker.com) → 右上角头像 → **Account settings** → **Personal access tokens** → **Generate new token** → 填描述与有效期、权限勾 `Read & Write` → **Generate**。⚠️ 令牌只在生成时显示一次，关掉就再也看不到，请立即保存。
+
+> **不要把令牌贴进代码、Issue 或聊天里。** 配到仓库 Secrets 中，流水线会通过 `secrets.*` 读取，不会出现在日志里。
+
+没配密钥时该工作流会自动跳过（不会报错）。首次推送会自动创建 `travel-screen` 仓库，若提示无权限则先在 Docker Hub 手动建一个同名仓库。
+
+配好后，任何人可以直接：
+
+```bash
+docker run -d -p 8388:8388 \
+  -v travel-screen-data:/app/data -v travel-screen-photos:/app/photos \
+  --name travel-screen <你的用户名>/travel-screen:latest
+```
+
+
 ## 配置（环境变量，均可在 application.yml 查看默认值）
 
 | 变量 | 说明 |
