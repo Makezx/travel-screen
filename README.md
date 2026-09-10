@@ -1,5 +1,9 @@
 # travel-screen · 旅行足迹大屏
 
+[English](README_EN.md) | 中文
+
+![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![CI](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
+
 一个用 Spring Boot + ECharts 做的**个人旅行足迹可视化大屏**：中国地图 3D 飞线、消费结构、年度足迹、花费排行、同行伙伴、照片墙、AI 行程规划。单文件前端、零外链、纯本地渲染（中国边界数据来自阿里云 DataV GeoAtlas，合规含台湾省与十段线）。
 
 > ⚠️ 仓库内的示例种子数据（`src/main/resources/data/seed-trips.json`）**均为脱敏后的虚构同行人姓名**，城市/路线/金额为演示用途，不含任何真实个人身份信息。请勿将生产数据库（`traveldb.mv.db`）或 `.env` 提交到公开仓库。
@@ -10,9 +14,15 @@
 
 ### 数据大屏（2D / 3D）
 
+**2D 大屏**：中国地图城市点亮、核心数据与花费排行。
+
 ![2D 大屏](images/dashboard-2d.png)
 
-![3D 飞线](images/dashboard-3d.png)
+**3D 地图**（`geo3D`：自动旋转 + 城市光柱 + 飞线流光）：
+
+![3D 地图自动旋转](images/demo-3d.gif)
+
+![3D 地图（静帧）](images/dashboard-3d.png)
 
 ### 数据维护（Excel 式后台）
 
@@ -53,7 +63,7 @@ java -jar target/travel-screen.jar
 # 3. 打开大屏
 #    http://localhost:8388/
 # 演示账号（仅能操作「示例·演示」团队，不影响真实数据）：
-#    demo@travel.cn  /  任意密码
+#    demo@travel.cn  /  Demo@2026
 # 管理员登录：/login  （默认 admin / admin123，首次启动后请改密码）
 ```
 
@@ -62,6 +72,40 @@ AI 行程规划默认未配置 Key；设置环境变量 `AI_API_KEY`（智谱 GL
 ```bash
 AI_API_KEY=sk-xxx java -jar target/travel-screen.jar
 ```
+
+## 快速开始（Docker 一键启动）
+
+不想在本机装 JDK 21 + Maven？装了 Docker 的话，一条命令就能跑起来：
+
+```bash
+# 1. 构建并后台启动（首次会下载依赖并编译，约 3～8 分钟；之后启动是秒级）
+docker compose up -d
+
+# 2. 打开大屏
+#    http://localhost:8388/
+# 演示账号（仅能操作「示例·演示」团队，不影响真实数据）：
+#    demo@travel.cn  /  Demo@2026
+# 管理员登录：/login  （默认 admin / admin123，首次启动后请改密码）
+
+# 3. 查看日志 / 停止
+docker compose logs -f travel-screen
+docker compose down          # 停止并移除容器，数据卷保留
+```
+
+说明：
+
+- **数据持久化**：H2 数据库文件、账号文件、密钥文件存放在具名卷 `travel-screen-data`（容器内 `/app/data`）；上传的照片存放在具名卷 `travel-screen-photos`（容器内 `/app/photos`）。容器重建、升级镜像数据都不会丢。
+  - 查看卷：compose 会给卷名加上项目前缀（默认取目录名，例如在 `travel-java` 目录下就是 `travel-java_travel-screen-data`），用 `docker volume ls | grep travel` 查看实际名称，再 `docker volume inspect <名称>`
+  - **彻底清空数据**（不可恢复）：`docker compose down -v`
+- **改管理员密码**：在 `docker-compose.yml` 同级新建 `.env`，写入 `ADMIN_USER=你的账号` 与 `ADMIN_PASS=你的强密码`，然后 `docker compose up -d` 重建容器生效。
+- **启用 AI 行程规划**：在 `.env` 里追加 `AI_API_KEY=sk-xxx` 后重建容器。
+- **改用 MySQL**：把 `docker-compose.yml` 里的 `SPRING_PROFILES_ACTIVE` 改成 `prod`，并补充 `DB_URL` / `DB_USER` / `DB_PASS`。
+- **调 JVM 参数**：在 `.env` 里设置 `JAVA_OPTS=-Xmx512m` 等。
+- 只用 Docker 不用 compose 也可以：
+  ```bash
+  docker build -t travel-screen:latest .
+  docker run -d -p 8388:8388 -v travel-screen-data:/app/data -v travel-screen-photos:/app/photos --name travel-screen travel-screen:latest
+  ```
 
 ## 配置（环境变量，均可在 application.yml 查看默认值）
 
