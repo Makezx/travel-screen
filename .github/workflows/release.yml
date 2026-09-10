@@ -2,6 +2,10 @@ name: Release
 
 # 推 v* 形式的 tag 即发布（例如 v1.0.0、v1.2.3）。
 # 也可以在 Actions 页面手动触发，填一个已存在的 tag 名。
+#
+# 发布说明优先取 release-notes/<tag>.md（人工策展）；
+# 找不到就回退到通用说明，并自动附上"完整变更"对比链接。
+# 已存在的 release 会被更新而非报错，所以同一个 tag 可以安全重跑。
 on:
   push:
     tags:
@@ -66,15 +70,44 @@ jobs:
           done
           echo "启动失败，日志尾部："; tail -60 /tmp/boot.log; exit 1
 
-      - name: Create GitHub Release
+      - name: Compose release notes
+        id: notes
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          NOTES=/tmp/release-notes.md
+          if [ -f "release-notes/${TAG}.md" ]; then
+            cp "release-notes/${TAG}.md" "$NOTES"
+            echo "使用策展说明：release-notes/${TAG}.md"
+          else
+            printf '# %s\n\n详见 [CHANGELOG.md](CHANGELOG.md)。\n' "$TAG" > "$NOTES"
+            echo "未找到 release-notes/${TAG}.md，回退到通用说明"
+          fi
+          # 附上"完整变更"对比链接（首个版本则指向提交列表）
+          PREV=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -1 || true)
+          if [ -n "$PREV" ]; then
+            printf '\n---\n\n**完整变更**：https://github.com/%s/compare/%s...%s\n' \
+              "$GITHUB_REPOSITORY" "$PREV" "$TAG" >> "$NOTES"
+          else
+            printf '\n---\n\n**全部提交**：https://github.com/%s/commits/%s\n' \
+              "$GITHUB_REPOSITORY" "$TAG" >> "$NOTES"
+          fi
+          echo "file=$NOTES" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ steps.ver.outputs.tag }}" \
-            "${{ steps.ver.outputs.jar }}" \
-            --title "${{ steps.ver.outputs.tag }}" \
-            --generate-notes \
-            --latest
+          TAG="${{ steps.ver.outputs.tag }}"
+          JAR="${{ steps.ver.outputs.jar }}"
+          NOTES="${{ steps.notes.outputs.file }}"
+          # 幂等：release 已存在就更新说明并覆盖附件，避免重跑时 "release already exists" 失败
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG 已存在，改为更新"
+            gh release edit "$TAG" --title "$TAG" --notes-file "$NOTES" --latest
+            gh release upload "$TAG" "$JAR" --clobber
+          else
+            gh release create "$TAG" "$JAR" --title "$TAG" --notes-file "$NOTES" --latest
+          fi
 
       - name: Summary
         run: |
