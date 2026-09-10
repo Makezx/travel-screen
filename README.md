@@ -126,7 +126,7 @@ docker compose down          # 停止并移除容器，数据卷保留
 
 | 密钥名 | 值 |
 |---|---|
-| `DOCKERHUB_USERNAME` | Docker Hub 用户名（**不是邮箱**） |
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名（**全小写；不是邮箱，也不是显示名**） |
 | `DOCKERHUB_TOKEN` | Docker Hub 个人访问令牌，权限选 **Read & Write** |
 
 令牌获取：登录 [Docker Hub](https://hub.docker.com) → 右上角头像 → **Account settings** → **Personal access tokens** → **Generate new token** → 填描述与有效期、权限勾 `Read & Write` → **Generate**。⚠️ 令牌只在生成时显示一次，关掉就再也看不到，请立即保存。
@@ -137,13 +137,27 @@ docker compose down          # 停止并移除容器，数据卷保留
 
 > **登录不上 Docker Hub 网站？先把两件事分清：**
 >
-> 1. **用户名大小写敏感。** `ZhangSan` 写成 `zhangsan` 或 `Zhangsan` 都会直接报「用户名或密码不正确」，
->    而报错文案不会告诉你是用户名错了还是密码错了。Docker Hub 用户名是**全小写**的，逐字符照抄。
-> 2. **网站登录框要的是账号密码，不是个人访问令牌。** 令牌只用于 CLI / CI。
+> 1. **用户名 ≠ 显示名。** Docker Hub 账号里 `username`（登录用）和 `full_name`（显示名）是两个字段。
+>    Docker Desktop 右上角、个人资料页头像下面显示的往往是**显示名**（可以有空格和大小写），
+>    它**不能用来登录**，也不能填进 `DOCKERHUB_USERNAME`。
+>    真正的用户名在**账号主页 URL** 里：`https://hub.docker.com/u/<用户名>`。
+> 2. **用户名大小写敏感且不含空格。** `ZhangSan` 写成 `zhangsan` / `Zhangsan` 都会直接报
+>    「用户名或密码不正确」，而报错文案不会告诉你是用户名错还是密码错。用户名是**全小写**的，逐字符照抄。
+> 3. **网站登录框要的是账号密码，不是个人访问令牌。** 令牌只用于 CLI / CI。
 >    如果当初是点 Google / GitHub 注册的，用对应按钮登录；没有密码就走「忘记密码」重设一次。
 >
 > 实际上**发布镜像完全不需要登录 Docker Hub 网站** —— 只要那两串值进了仓库 Secrets 就够了。
 > 别在登录页上卡住。
+>
+> 想自己判定错在哪一半，可以直接问 Docker Hub 的 API（比网页反馈清楚）：
+>
+> ```bash
+> U='你填的用户名'; P='你填的密码或令牌'
+> curl -s -o /dev/null -w '用户名存在性: %{http_code}\n' "https://hub.docker.com/v2/users/$U/"
+> curl -s -o /dev/null -w '登录: %{http_code}\n' -X POST -H 'Content-Type: application/json' \
+>   -d "{\"username\":\"$U\",\"password\":\"$P\"}" "https://hub.docker.com/v2/users/login/"
+> # 200 + 200 = 两样都对；404 = 用户名错；401 = 密码 / 令牌错
+> ```
 
 > **填错了也不会让你猜。** 工作流第一步就会拿这套凭据去 Docker Hub 真正换一次 registry token
 > （等价于 `docker login` 的握手），不通过就直接失败，并在日志里打印可读原因：
