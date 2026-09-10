@@ -1,0 +1,39 @@
+services:
+  travel-screen:
+    build: .
+    image: travel-screen:latest
+    container_name: travel-screen
+    restart: unless-stopped
+    ports:
+      # 宿主机端口:容器内端口（application.yml: server.port=${PORT:8388}）
+      - "8388:8388"
+    environment:
+      # 运行环境：local = H2 文件库（默认，零配置）；prod = MySQL（需同时提供 DB_* 变量）
+      SPRING_PROFILES_ACTIVE: "local"
+      # H2 文件库落在挂载卷里，容器重建数据不丢（local profile 生效）
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/app/data/traveldb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE"
+      # 账号文件与密钥文件同样放进数据卷，避免容器重建后账号丢失
+      AUTH_FILE: "/app/data/travel-auth.json"
+      SECRET_FILE: "/app/data/travel-secret.key"
+      # 照片目录（挂载卷，默认 ./photos）
+      PHOTO_DIR: "/app/photos"
+      # 管理员初始账号/密码。强烈建议在本文件同级创建 .env 覆盖：
+      #   ADMIN_USER=你的账号
+      #   ADMIN_PASS=你的强密码
+      ADMIN_USER: "${ADMIN_USER:-admin}"
+      ADMIN_PASS: "${ADMIN_PASS:-admin123}"
+      # 新用户默认初始密码
+      DEFAULT_USER_PASS: "${DEFAULT_USER_PASS:-user123}"
+      # AI 行程规划密钥（可选，留空也能正常启动，只是 AI 规划功能不可用）
+      AI_API_KEY: "${AI_API_KEY:-}"
+      # 可选：追加 JVM 参数，例如 JAVA_OPTS=-Xmx512m
+      JAVA_OPTS: "${JAVA_OPTS:-}"
+    volumes:
+      # 数据库 + 账号/密钥文件
+      - travel-screen-data:/app/data
+      # 上传的照片
+      - travel-screen-photos:/app/photos
+
+volumes:
+  travel-screen-data:
+  travel-screen-photos:
