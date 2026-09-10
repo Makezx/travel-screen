@@ -1,0 +1,86 @@
+name: Release
+
+# 推 v* 形式的 tag 即发布（例如 v1.0.0、v1.2.3）。
+# 也可以在 Actions 页面手动触发，填一个已存在的 tag 名。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的 tag（需已存在，例如 v1.0.0）'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 生成 release notes 需要完整历史
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "jar=travel-screen-${TAG}.jar" >> "$GITHUB_OUTPUT"
+          echo "发布版本：$TAG"
+
+      - name: Run tests
+        run: mvn -B --no-transfer-progress clean test
+
+      - name: Package runnable jar
+        run: mvn -B --no-transfer-progress -DskipTests package
+
+      - name: Rename jar
+        run: cp target/travel-screen.jar "${{ steps.ver.outputs.jar }}"
+
+      - name: Smoke check the jar actually boots
+        run: |
+          # 用 local profile 起一次，确认发布物可运行（不接任何外部依赖）
+          java -jar "${{ steps.ver.outputs.jar }}" \
+            --server.port=8399 --spring.profiles.active=local > /tmp/boot.log 2>&1 &
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8399/ || true)
+            [ "$code" = "200" ] && echo "启动成功（HTTP 200）" && exit 0
+            sleep 2
+          done
+          echo "启动失败，日志尾部："; tail -60 /tmp/boot.log; exit 1
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.ver.outputs.tag }}" \
+            "${{ steps.ver.outputs.jar }}" \
+            --title "${{ steps.ver.outputs.tag }}" \
+            --generate-notes \
+            --latest
+
+      - name: Summary
+        run: |
+          {
+            echo "### 已发布 ${{ steps.ver.outputs.tag }}"
+            echo ""
+            echo "- 发布物：\`${{ steps.ver.outputs.jar }}\`（可直接 \`java -jar\` 运行）"
+            echo "- 页面：https://github.com/${{ github.repository }}/releases/tag/${{ steps.ver.outputs.tag }}"
+          } >> "$GITHUB_STEP_SUMMARY"

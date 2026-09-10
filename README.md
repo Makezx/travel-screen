@@ -2,7 +2,7 @@
 
 [English](README_EN.md) | 中文
 
-![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![CI](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![Release](https://img.shields.io/github/v/release/Makezx/travel-screen?label=release&color=blue) ![Stars](https://img.shields.io/github/stars/Makezx/travel-screen?style=flat&color=yellow) ![CI](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
 
 一个用 Spring Boot + ECharts 做的**个人旅行足迹可视化大屏**：中国地图 3D 飞线、消费结构、年度足迹、花费排行、同行伙伴、照片墙、AI 行程规划。单文件前端、零外链、纯本地渲染（中国边界数据来自阿里云 DataV GeoAtlas，合规含台湾省与十段线）。
 
@@ -55,6 +55,14 @@
 - 构建：Maven
 
 ## 快速开始（本地）
+
+**最省事的方式**：直接下最新 [Release](https://github.com/Makezx/travel-screen/releases/latest) 里的 jar，不用装 JDK 之外的任何东西、不用编译。
+
+```bash
+java -jar travel-screen-v1.0.0.jar
+```
+
+想自己编译就用下面的步骤：
 
 ```bash
 # 1. 构建
@@ -134,6 +142,21 @@ src/main/resources/
   static/vendor/           # echarts / echarts-gl / 地图 GeoJSON（本地化）
 deploy/                    # systemd 单元、启动脚本、备份脚本（凭据均为占位符）
 ```
+
+## 参与贡献
+
+欢迎 Issue 和 PR。开工前建议先看 [CONTRIBUTING.md](CONTRIBUTING.md)，里面写了本地跑法、必须遵守的几条约定（保留字列名、前端零外链、地图合规），以及这个项目**刻意不做**的事。
+
+| 我想…… | 去哪 |
+|---|---|
+| 提问、聊想法、晒自己的大屏 | [Discussions](https://github.com/Makezx/travel-screen/discussions) |
+| 报 Bug | [Bug 报告](https://github.com/Makezx/travel-screen/issues/new?template=bug_report.yml) |
+| 提新功能 | [功能请求](https://github.com/Makezx/travel-screen/issues/new?template=feature_request.yml) |
+| 报安全漏洞 | [私密漏洞报告](https://github.com/Makezx/travel-screen/security/advisories/new)（**别开公开 Issue**） |
+
+- 变更记录：[CHANGELOG.md](CHANGELOG.md)
+- 安全与部署硬性要求：[SECURITY.md](SECURITY.md)
+- 行为准则：[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## License
 

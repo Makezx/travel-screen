@@ -2,7 +2,7 @@
 
 **English** | [中文](README.md)
 
-![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![Build](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen) ![Release](https://img.shields.io/github/v/release/Makezx/travel-screen?label=release&color=blue) ![Stars](https://img.shields.io/github/stars/Makezx/travel-screen?style=flat&color=yellow) ![Build](https://github.com/Makezx/travel-screen/actions/workflows/ci.yml/badge.svg)
 
 A personal **travel footprint & expense dashboard** built with Spring Boot and ECharts: a 3D flight-line map of China, spending breakdown, yearly footprint, cost rankings, travel companions, photo wall, and AI trip planning.
 
@@ -65,6 +65,14 @@ All screenshots are rendered from a local H2 instance seeded with the anonymized
 - Build: Maven
 
 ## Quick Start (Local)
+
+**Fastest path**: grab the jar from the latest [Release](https://github.com/Makezx/travel-screen/releases/latest) — no build step, nothing beyond a JDK.
+
+```bash
+java -jar travel-screen-v1.0.0.jar
+```
+
+Or build it yourself:
 
 ```bash
 # 1. Build
@@ -146,6 +154,21 @@ src/main/resources/
   static/vendor/           # echarts / echarts-gl / map GeoJSON (vendored locally)
 deploy/                    # systemd unit, start/backup scripts (placeholders only)
 ```
+
+## Contributing
+
+Issues and PRs are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first — it covers the local setup, the conventions you must keep (reserved-word column names, zero external requests, map compliance), and the things this project deliberately does **not** do.
+
+| I want to… | Go here |
+|---|---|
+| Ask a question, share ideas, show your dashboard | [Discussions](https://github.com/Makezx/travel-screen/discussions) |
+| Report a bug | [Bug report](https://github.com/Makezx/travel-screen/issues/new?template=bug_report.yml) |
+| Request a feature | [Feature request](https://github.com/Makezx/travel-screen/issues/new?template=feature_request.yml) |
+| Report a security issue | [Private vulnerability report](https://github.com/Makezx/travel-screen/security/advisories/new) (**not** a public issue) |
+
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+- Security and deployment requirements: [SECURITY.md](SECURITY.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## License
 

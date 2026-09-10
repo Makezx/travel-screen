@@ -1,0 +1,100 @@
+name: Bug 报告
+description: 报告一个可复现的异常或错误行为
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。为了能定位问题，请尽量把下面的信息填完整。
+        如果你怀疑是**安全漏洞**，请不要用这个表单，见 [SECURITY.md](https://github.com/Makezx/travel-screen/blob/main/SECURITY.md)。
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索过现有 Issue，没有重复
+          required: true
+        - label: 我在 `main` 分支最新代码上复现过
+          required: true
+        - label: 我已把日志里的密钥、口令、真实姓名抹掉
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 实际发生了什么
+      description: 清楚描述你观察到的现象。如果是界面问题，尽量附截图。
+      placeholder: 点「全部点亮」后，地图上只有省份变色，城市多边形没有出现……
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 你期望发生什么
+      placeholder: 应该同时点亮所有去过的城市
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 越具体越好。能稳定复现的步骤比"偶发"有用得多。
+      placeholder: |
+        1. 用 demo@travel.cn 登录
+        2. 进入「数据维护」→ 新建行程，城市填「广州」
+        3. 返回大屏，广州没有点亮
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / commit
+      description: 运行 `git rev-parse --short HEAD`，或写你用的 Release 版本号
+      placeholder: a64eb59 / v1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: run-mode
+    attributes:
+      label: 运行方式
+      options:
+        - 本地 java -jar（local profile，H2）
+        - Docker / docker compose
+        - 自建服务器（MySQL，prod profile）
+        - 其他（在下方说明）
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 环境
+      description: 操作系统、JDK 版本、浏览器与版本
+      placeholder: macOS 15.2 / OpenJDK 21.0.2 / Chrome 140
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 相关日志
+      description: |
+        本地运行：控制台输出。systemd 托管：`journalctl -u travel-screen -n 200`。
+        **提交前请删掉 AppID、Key、口令、真实姓名等敏感信息。**
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充信息
+      description: 其他可能有用的线索——比如是不是只在某个特定城市/行程上出问题
+    validations:
+      required: false

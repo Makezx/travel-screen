@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 提问 / 使用交流 / 展示你的大屏
+    url: https://github.com/Makezx/travel-screen/discussions
+    about: 使用问题、部署疑问、想法讨论、晒成果，都走 Discussions，不需要开 Issue。
+  - name: 报告安全漏洞
+    url: https://github.com/Makezx/travel-screen/security/advisories/new
+    about: 请不要用公开 Issue 报告安全问题，用私密漏洞报告。
+  - name: 部署文档
+    url: https://github.com/Makezx/travel-screen/blob/main/DEPLOY.md
+    about: 部署到自己的服务器之前先看这里（含 Nginx 反代与 systemd 托管）。
