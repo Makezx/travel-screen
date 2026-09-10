@@ -1,8 +1,14 @@
+# syntax=docker/dockerfile:1
 # 多阶段构建：Maven 构建 -> 精简 JRE 运行
 # 构建产物：target/travel-screen.jar（由 pom.xml 的 <finalName> 决定）
 
 # ---------- Stage 1: 构建 ----------
-FROM maven:3.9-eclipse-temurin-21 AS build
+# --platform=$BUILDPLATFORM：构建阶段固定跑在"原生"平台（CI 上即 amd64），
+# 不跟随目标平台。产物是纯字节码 jar，与架构无关，可以原样拷进任意平台的运行阶段。
+#
+# 不写这一行的后果：多架构构建时 arm64 那一路会在 QEMU 模拟下把整个 Maven 构建
+# 再跑一遍，耗时从 1~2 分钟膨胀到十几分钟，且容易触发超时和随机失败。
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /build
 

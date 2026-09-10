@@ -1,16 +1,16 @@
 name: Docker
 
-# 发布镜像到 Docker Hub，方便 `docker search` / `docker run` 直接找到并拉取。
+# 发布镜像到 Docker Hub，方便 `docker pull` / `docker run` 直接使用。
 #
 # 触发：推 v* tag（与 Release 工作流并行跑）；也可以在 Actions 页面手动触发。
 # ⚠️ 这里故意监听 tag push 而不是 release:published —— release 是由 Release 工作流
 #    用 GITHUB_TOKEN 创建的，而 GitHub 不会让 GITHUB_TOKEN 产生的动作再去触发其他
 #    工作流（防递归），所以 release:published 永远等不到事件。
 #
-# 需要的仓库密钥（Settings → Secrets and variables → Actions）：
-#   DOCKERHUB_USERNAME  Docker Hub 用户名（不是邮箱）
-#   DOCKERHUB_TOKEN     Docker Hub 个人访问令牌（Read & Write）
-# 未配置时本工作流会直接跳过（绿色），不会产生失败告警。
+# 需要的仓库密钥（Settings → Secrets and variables → Actions，注意是 Secrets 不是 Variables）：
+#   DOCKERHUB_USERNAME  Docker Hub 用户名（全小写，不是邮箱、不是昵称）
+#   DOCKERHUB_TOKEN     Docker Hub 个人访问令牌（Personal access token，Read & Write）
+# 未配置时本工作流直接跳过（绿色）；配置了但校验不通过会明确报错并指出原因。
 on:
   push:
     tags:
@@ -26,20 +26,71 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 先探密钥。没配就整体跳过，避免仓库里长期挂一个红叉。
-      - name: Check Docker Hub credentials
+      # 第一步就把凭据"验真"，而不是只判断"非空"。
+      # 只填了名字不校验的话，错误会推迟到 docker login 那一步，日志里只有一句
+      # "Error: ... login failed"，看不出到底是用户名错了还是 token 错了。
+      - name: Validate Docker Hub credentials
         id: creds
         env:
           DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          if [ -n "$DH_USER" ] && [ -n "$DH_TOKEN" ]; then
-            echo "ready=1" >> "$GITHUB_OUTPUT"
-            echo "密钥已配置，将发布镜像到 $DH_USER/travel-screen"
-          else
+          set -euo pipefail
+
+          # 去掉粘贴时常见的首尾空格和换行——这是最高频的失败原因
+          U="$(printf '%s' "$DH_USER" | tr -d '[:space:]')"
+          T="$(printf '%s' "$DH_TOKEN" | tr -d '[:space:]')"
+
+          if [ -z "$U" ] || [ -z "$T" ]; then
             echo "ready=0" >> "$GITHUB_OUTPUT"
             echo "::notice::未配置 DOCKERHUB_USERNAME / DOCKERHUB_TOKEN，跳过镜像发布。配置方式见 README 的「发布到 Docker Hub」一节。"
+            exit 0
           fi
+
+          echo "ready=1" >> "$GITHUB_OUTPUT"
+
+          # 只打印"指纹"（长度 / 形状），不打印原值：
+          # GitHub 会把 secret 原值在日志里打码成 ***，但长度和首字符不受影响，足够定位问题。
+          echo "DOCKERHUB_USERNAME: len=${#U}"
+          echo "DOCKERHUB_TOKEN:    len=${#T}  prefix=$(printf '%s' "$T" | cut -c1-9)"
+
+          if [ "${#U}" -gt 30 ]; then
+            echo "::warning::用户名长度 ${#U} 偏长，Docker Hub 用户名通常不超过 30 字符——是不是填了邮箱或昵称？"
+          fi
+          case "$U" in
+            *@*)
+              echo "::warning::DOCKERHUB_USERNAME 里含 @，看起来是邮箱。Docker Hub 登录要的是用户名（Account Settings 页顶部那个），不是邮箱。"
+              ;;
+          esac
+          if [ "$U" != "$(printf '%s' "$U" | tr '[:upper:]' '[:lower:]')" ]; then
+            echo "::warning::DOCKERHUB_USERNAME 含大写字母。Docker Hub 用户名是全小写的，请照抄。"
+          fi
+          case "$T" in
+            dckr_pat_*) ;;
+            *)
+              echo "::warning::DOCKERHUB_TOKEN 不是 dckr_pat_ 开头的个人访问令牌。如果填的是账号密码，在有 2FA 的账号上无法用于 CLI 登录。"
+              ;;
+          esac
+
+          # 真正问一次 Docker Hub：用这套凭据换 registry token（相当于 docker login 的握手）
+          CODE="$(curl -s -o /tmp/dh.json -w '%{http_code}' --retry 3 --retry-all-errors --max-time 30 \
+            --user "$U:$T" \
+            "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$U/travel-screen:push,pull")"
+          echo "auth.docker.io 握手: HTTP $CODE"
+
+          if [ "$CODE" != "200" ] || ! grep -q '"token"' /tmp/dh.json; then
+            echo "::error::Docker Hub 凭据校验不通过（HTTP $CODE）。按顺序排查："
+            echo "::error::1) DOCKERHUB_USERNAME 是否为全小写用户名（邮箱/昵称都不行）；"
+            echo "::error::2) DOCKERHUB_TOKEN 复制时是否带了空格或换行（粘贴到文本框里重新全选删除再粘贴）；"
+            echo "::error::3) 令牌是否已被删除、过期，或属于另一个账号；"
+            echo "::error::4) 是否把值填到了 Variables 而不是 Secrets。"
+            echo "--- Docker Hub 返回（已粗筛长串）---"
+            sed -e 's/[A-Za-z0-9_-]\{40,\}/***/g' /tmp/dh.json | head -c 300
+            echo
+            exit 1
+          fi
+
+          echo "凭据校验通过，且已确认具备 push 权限。"
 
       - name: Checkout
         if: steps.creds.outputs.ready == '1'
@@ -70,7 +121,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=ref,event=branch
 
       - name: Build and push
@@ -82,6 +133,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # 关掉 provenance 证明：否则 Docker Hub 镜像页会多出两行
+          # "unknown/unknown" 平台，对个人项目只是噪音
+          provenance: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -91,9 +145,9 @@ jobs:
           {
             echo "### 镜像已发布"
             echo ""
-            echo "\`\`\`"
+            echo '```'
             echo "${{ steps.meta.outputs.tags }}"
-            echo "\`\`\`"
+            echo '```'
             echo ""
             echo "平台：linux/amd64, linux/arm64"
           } >> "$GITHUB_STEP_SUMMARY"

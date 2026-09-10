@@ -135,6 +135,38 @@ docker compose down          # 停止并移除容器，数据卷保留
 
 没配密钥时该工作流会自动跳过（不会报错）。首次推送会自动创建 `travel-screen` 仓库，若提示无权限则先在 Docker Hub 手动建一个同名仓库。
 
+> **填错了也不会让你猜。** 工作流第一步就会拿这套凭据去 Docker Hub 真正换一次 registry token
+> （等价于 `docker login` 的握手），不通过就直接失败，并在日志里打印可读原因：
+> 用户名像邮箱、含大写字母、token 不是 `dckr_pat_` 开头、握手 HTTP 状态码等，
+> 同时输出用户名/令牌的**长度指纹**（不打印原值），方便和正确值对照。
+> 记得填在 **Secrets** 而不是 **Variables**（工作流读的是 `secrets.*`）。
+
+<details>
+<summary>macOS + Docker Desktop：从本机钥匙串精确复制凭据，避免手抄出错</summary>
+
+如果你本机已经 `docker login` 成功过，凭据就存在钥匙串里，直接导出到剪贴板最稳：
+
+```bash
+# 用户名 → 剪贴板
+printf 'https://index.docker.io/v1/' | docker-credential-desktop get \
+  | python3 -c "import sys,json;print(json.load(sys.stdin)['Username'])" | pbcopy
+
+# 令牌 → 剪贴板（粘到 GitHub 的 secret 输入框里，别带换行）
+printf 'https://index.docker.io/v1/' | docker-credential-desktop get \
+  | python3 -c "import sys,json;print(json.load(sys.stdin)['Secret'])" | pbcopy
+```
+
+想先确认这套凭据真的能推送（而不是只看能不能登录），可以直接问 Docker Hub 要一个带上写权限的令牌：
+
+```bash
+U=$(printf 'https://index.docker.io/v1/' | docker-credential-desktop get | python3 -c "import sys,json;print(json.load(sys.stdin)['Username'])")
+T=$(printf 'https://index.docker.io/v1/' | docker-credential-desktop get | python3 -c "import sys,json;print(json.load(sys.stdin)['Secret'])")
+curl -s -o /dev/null -w '%{http_code}\n' --user "$U:$T" \
+  "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$U/travel-screen:push,pull"
+# 200 = 凭据有效且具备 push 权限；401 = 凭据无效
+```
+</details>
+
 配好后，任何人可以直接：
 
 ```bash
