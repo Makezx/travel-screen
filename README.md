@@ -143,6 +143,28 @@ docker run -d -p 8388:8388 \
   --name travel-screen <你的用户名>/travel-screen:latest
 ```
 
+### 国内网络提示（拉取镜像超时 / 认证报错）
+
+Docker Hub（`registry-1.docker.io`）在国内直连不稳定，典型症状是 `context deadline exceeded`，
+或 `Get "https://registry-1.docker.io/v2/": unknown: malformed HTTP Authorization header`。
+
+**后者容易被误判成"令牌错了"，其实多数情况是守护进程没走代理。** 排查顺序：
+
+1. 先确认代理本身能到 Docker Hub（把 `<代理端口>` 换成你实际的，Clash 常见是 7897）：
+   ```bash
+   curl -x http://127.0.0.1:<代理端口> -o /dev/null -w '%{http_code}\n' https://registry-1.docker.io/v2/
+   # 期望 401（未认证质询＝通了）；000 就是不通
+   ```
+2. **Docker Desktop → Settings → Resources → Proxies → Manual**，HTTP 与 HTTPS 都填 `http://127.0.0.1:<代理端口>`，
+   Apply & restart。**照填 `127.0.0.1` 即可**，Docker Desktop 会自动映射到宿主机，不用改成 `host.docker.internal`。
+3. 验证：`docker system info | grep -i proxy`
+4. 仍然报 header 错，再 `docker logout` 并重新 `docker login`（粘贴令牌别带换行/首尾空格），
+   同时在 Docker Desktop 窗口右上角 **Sign out** 一次，排除内置 hubproxy 注入陈旧 token。
+
+> 只用于 `docker build` / `docker pull` 的守护进程代理与**容器内部**的代理是两回事：容器里要联网得单独注入
+> `-e HTTPS_PROXY=http://host.docker.internal:<代理端口>`（容器内用 `host.docker.internal`，不能用 `127.0.0.1`）。
+> 本项目的容器本身**不需要联网**（地图数据离线内嵌）。
+
 
 ## 配置（环境变量，均可在 application.yml 查看默认值）
 
