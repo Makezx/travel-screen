@@ -135,6 +135,16 @@ docker compose down          # 停止并移除容器，数据卷保留
 
 没配密钥时该工作流会自动跳过（不会报错）。首次推送会自动创建 `travel-screen` 仓库，若提示无权限则先在 Docker Hub 手动建一个同名仓库。
 
+> **登录不上 Docker Hub 网站？先把两件事分清：**
+>
+> 1. **用户名大小写敏感。** `ZhangSan` 写成 `zhangsan` 或 `Zhangsan` 都会直接报「用户名或密码不正确」，
+>    而报错文案不会告诉你是用户名错了还是密码错了。Docker Hub 用户名是**全小写**的，逐字符照抄。
+> 2. **网站登录框要的是账号密码，不是个人访问令牌。** 令牌只用于 CLI / CI。
+>    如果当初是点 Google / GitHub 注册的，用对应按钮登录；没有密码就走「忘记密码」重设一次。
+>
+> 实际上**发布镜像完全不需要登录 Docker Hub 网站** —— 只要那两串值进了仓库 Secrets 就够了。
+> 别在登录页上卡住。
+
 > **填错了也不会让你猜。** 工作流第一步就会拿这套凭据去 Docker Hub 真正换一次 registry token
 > （等价于 `docker login` 的握手），不通过就直接失败，并在日志里打印可读原因：
 > 用户名像邮箱、含大写字母、token 不是 `dckr_pat_` 开头、握手 HTTP 状态码等，
@@ -154,6 +164,13 @@ printf 'https://index.docker.io/v1/' | docker-credential-desktop get \
 # 令牌 → 剪贴板（粘到 GitHub 的 secret 输入框里，别带换行）
 printf 'https://index.docker.io/v1/' | docker-credential-desktop get \
   | python3 -c "import sys,json;print(json.load(sys.stdin)['Secret'])" | pbcopy
+```
+
+先看一眼用户名长什么样（方括号能暴露首尾空白，也顺便确认大小写）：
+
+```bash
+U=$(printf 'https://index.docker.io/v1/' | docker-credential-desktop get | python3 -c "import sys,json;print(json.load(sys.stdin)['Username'])")
+echo "用户名=[$U]  长度=${#U}"
 ```
 
 想先确认这套凭据真的能推送（而不是只看能不能登录），可以直接问 Docker Hub 要一个带上写权限的令牌：
