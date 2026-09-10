@@ -4,6 +4,14 @@
 
 > ⚠️ 仓库内的示例种子数据（`src/main/resources/data/seed-trips.json`）**均为脱敏后的虚构同行人姓名**，城市/路线/金额为演示用途，不含任何真实个人身份信息。请勿将生产数据库（`traveldb.mv.db`）或 `.env` 提交到公开仓库。
 
+## 效果预览
+
+以下截图为本地 H2 脱敏示例数据，页面不含真实姓名。
+
+![2D 大屏](images/dashboard-2d.png)
+
+![3D 飞线](images/dashboard-3d.png)
+
 ## 技术栈
 
 - 后端：Spring Boot 3.3.5 + Java 21 + JPA/Hibernate
