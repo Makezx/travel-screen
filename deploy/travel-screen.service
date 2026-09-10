@@ -1,0 +1,22 @@
+[Unit]
+Description=Travel Screen Java Service
+After=network.target
+
+[Service]
+Type=simple
+User=travel
+WorkingDirectory=/opt/travel-screen
+ExecStart=/usr/bin/java -jar /opt/travel-screen/travel-screen.jar
+Restart=on-failure
+RestartSec=5
+
+Environment="SPRING_PROFILES_ACTIVE=prod"
+Environment="DB_URL=jdbc:mysql://127.0.0.1:3306/travel?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false"
+Environment="DB_USER=travel"
+Environment="DB_PASS=<你的MySQL密码>"
+Environment="ADMIN_USER=admin"
+Environment="ADMIN_PASS=<你的管理员密码>"
+# Environment="AI_API_KEY=sk-..."
+
+[Install]
+WantedBy=multi-user.target

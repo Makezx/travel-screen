@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: travel-screen
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8388}
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      force-response: true
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+
+# 应用自定义配置（对所有 profile 生效）
+# ⚠️ 以下默认账号/密码仅用于本地演示，开源后请务必通过环境变量覆盖，并在首次启动后立即修改！
+app:
+  auth-file: ${AUTH_FILE:./travel-auth.json}
+  secret-file: ${SECRET_FILE:./travel-secret.key}
+  admin-user: ${ADMIN_USER:admin}
+  admin-pass: ${ADMIN_PASS:admin123}
+  session-hours: ${SESSION_HOURS:12}
+  default-user-pass: ${DEFAULT_USER_PASS:user123}
+  ai:
+    enabled: ${AI_ENABLED:true}
+    base-url: ${AI_BASE_URL:https://open.bigmodel.cn/api/paas/v4/chat/completions}
+    api-key: ${AI_API_KEY:}
+    model: ${AI_MODEL:glm-4-air}
+    vision-model: ${AI_VISION_MODEL:glm-4.6v}
+    timeout-ms: ${AI_TIMEOUT_MS:60000}
+    # AI 调用保护（生产是真实付费 Key + demo 账号公开，必须防刷）
+    rate-per-minute: ${AI_RATE_PER_MINUTE:5}
+    rate-per-day: ${AI_RATE_PER_DAY:100}
+    max-concurrency: ${AI_MAX_CONCURRENCY:2}
+    queue-timeout-ms: ${AI_QUEUE_TIMEOUT_MS:3000}
+  photo-dir: ${PHOTO_DIR:./photos}
+
+# 本地默认：H2 文件库，零运维，可直接 java -jar 跑起来
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:h2:file:./traveldb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+# 生产：MySQL（需设置下面三个环境变量；不设置则回退到 local 的 H2 文件库）
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/travel?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${DB_USER:travel}
+    password: ${DB_PASS:changeme}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false

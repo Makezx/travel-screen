@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>登录 · 青春没有售价</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0a1f; --bg2:#141233; --panel:rgba(36,28,71,.55); --panel2:rgba(28,22,58,.85);
+  --line:rgba(168,120,255,.22); --line2:rgba(255,120,200,.40);
+  --tx:#f3ecff; --tx2:#b9a8e6; --tx3:#7d6aa8;
+  --pink:#ff5fa2; --purple:#9b6bff; --cyan:#46e6ff; --orange:#ffb14e; --green:#5cf2a8; --yellow:#ffe066;
+  --land:#241c4d; --landline:#3a2e6e;
+  --g1:rgba(155,107,255,.28); --g2:rgba(255,95,162,.22); --g3:rgba(70,230,255,.18);
+  --cat-eat:#46e6ff; --cat-stay:#5cf2a8; --cat-go:#ff8a4e; --cat-ticket:#ffb14e; --cat-other:#9b6bff;
+}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:radial-gradient(1000px 700px at 15% -10%,var(--g1),transparent 55%),
+             radial-gradient(900px 600px at 90% 110%,var(--g2),transparent 55%),
+             linear-gradient(160deg,var(--bg),var(--bg2));color:var(--tx)}
+.card{width:340px;max-width:92vw;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:32px 26px;backdrop-filter:blur(10px);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+h1{font-size:22px;letter-spacing:.18em;text-align:center;margin-bottom:6px;
+  background:linear-gradient(92deg,var(--cyan),var(--purple) 45%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+p{text-align:center;font-size:12px;color:var(--tx3);margin-bottom:22px;letter-spacing:1px}
+input{width:100%;height:46px;margin-bottom:12px;padding:0 14px;border-radius:10px;font-size:16px;border:1px solid var(--line);background:rgba(11,10,31,.7);color:var(--tx);outline:none}
+input:focus{border-color:var(--pink);box-shadow:0 0 0 3px var(--line2)}
+button{width:100%;height:46px;border:0;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:3px;cursor:pointer;color:#fff;
+  background:linear-gradient(92deg,var(--purple),var(--pink));transition:.15s}
+button:active{opacity:.85}
+button:hover{box-shadow:0 0 20px var(--line2)}
+.err{min-height:18px;font-size:12px;color:#ff8a7a;text-align:center;margin-top:10px}
+.foot{text-align:center;margin-top:16px;font-size:12px;color:var(--tx3)}
+.foot a{color:var(--cyan);text-decoration:none}
+#modal{position:fixed;inset:0;background:rgba(6,5,18,.7);display:none;align-items:center;justify-content:center;z-index:40}
+#modalCard{width:360px;max-width:92vw;background:var(--panel2);border:1px solid var(--line2);border-radius:16px;padding:26px}
+#modalCard h2{font-size:18px;font-weight:800;margin-bottom:6px;background:linear-gradient(92deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+#modalCard .sub{font-size:12px;color:var(--tx2);margin-bottom:14px}
+</style>
+<script>
+(function(){
+  var THEMES={
+    aurora:{
+      '--bg':'#06121a','--bg2':'#0a1f2b',
+      '--panel':'rgba(16,40,52,.55)','--panel2':'rgba(10,30,42,.85)',
+      '--line':'rgba(80,200,210,.18)','--line2':'rgba(80,230,200,.40)',
+      '--tx':'#e8fbff','--tx2':'#9fd4d8','--tx3':'#5e8a90',
+      '--pink':'#7af0c8','--purple':'#5b8cff','--cyan':'#3fe0d0','--orange':'#ffb05a','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#10232e','--landline':'#1f4a52',
+      '--g1':'rgba(91,140,255,.26)','--g2':'rgba(63,224,208,.20)','--g3':'rgba(92,242,168,.16)',
+      '--cat-eat':'#3fe0d0','--cat-stay':'#5cf2a8','--cat-go':'#5b8cff','--cat-ticket':'#ffb05a','--cat-other':'#9a8cff'
+    },
+    sunset:{
+      '--bg':'#160d12','--bg2':'#241016',
+      '--panel':'rgba(54,30,36,.55)','--panel2':'rgba(40,22,28,.86)',
+      '--line':'rgba(255,170,120,.20)','--line2':'rgba(255,140,90,.40)',
+      '--tx':'#fff1e8','--tx2':'#e3b79c','--tx3':'#a87a64',
+      '--pink':'#ff6f91','--purple':'#ff9e5e','--cyan':'#ffd166','--orange':'#ffb05a','--green':'#7fd99a','--yellow':'#ffe08a',
+      '--land':'#2a161c','--landline':'#5a2e34',
+      '--g1':'rgba(255,140,80,.28)','--g2':'rgba(255,95,140,.22)','--g3':'rgba(255,200,120,.18)',
+      '--cat-eat':'#ffb05a','--cat-stay':'#7fd99a','--cat-go':'#ffd166','--cat-ticket':'#ff6f91','--cat-other':'#c98cff'
+    },
+    neon:{
+      '--bg':'#0b0a1f','--bg2':'#141233',
+      '--panel':'rgba(36,28,71,.55)','--panel2':'rgba(28,22,58,.85)',
+      '--line':'rgba(168,120,255,.22)','--line2':'rgba(255,120,200,.40)',
+      '--tx':'#f3ecff','--tx2':'#b9a8e6','--tx3':'#7d6aa8',
+      '--pink':'#ff5fa2','--purple':'#9b6bff','--cyan':'#46e6ff','--orange':'#ffb14e','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#241c4d','--landline':'#3a2e6e',
+      '--g1':'rgba(155,107,255,.28)','--g2':'rgba(255,95,162,.22)','--g3':'rgba(70,230,255,.18)',
+      '--cat-eat':'#46e6ff','--cat-stay':'#5cf2a8','--cat-go':'#ff8a4e','--cat-ticket':'#ffb14e','--cat-other':'#9b6bff'
+    }
+  };
+  var KEY='screenTheme';
+  function applyTheme(n){var t=THEMES[n]||THEMES.aurora,r=document.documentElement;for(var k in t){if(t.hasOwnProperty(k))r.style.setProperty(k,t[k]);}try{localStorage.setItem(KEY,n);}catch(e){}try{window.dispatchEvent(new CustomEvent('themechange',{detail:{name:n}}));}catch(e){}}
+  function getTheme(){try{return localStorage.getItem(KEY)||'aurora';}catch(e){return 'aurora';}}
+  window.THEMES=THEMES;window.applyTheme=applyTheme;window.getTheme=getTheme;
+  applyTheme(getTheme());
+})();
+</script>
+</head>
+<body>
+<div class="card">
+  <h1>青春没有售价</h1>
+  <p>旅行足迹大屏 · 请登录</p>
+  <input id="user" placeholder="账号" autocomplete="username" value="admin">
+  <input id="pass" type="password" placeholder="密码" autocomplete="current-password">
+  <button id="go">进入大屏</button>
+  <div class="err" id="err"></div>
+  <div class="foot"><a href="/">返回大屏</a></div>
+  <div style="margin-top:14px">
+    <select id="themeSel" style="width:100%;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);font-size:13px;cursor:pointer;outline:none">
+      <option value="aurora">极光蓝绿</option><option value="sunset">暖阳橙金</option><option value="neon">霓虹紫粉</option>
+    </select>
+  </div>
+</div>
+
+<div id="modal"><div id="modalCard">
+  <h2>首次登录 · 请修改密码</h2>
+  <div class="sub">账号 <b id="cpUser"></b> 初始密码需修改后才能继续使用。</div>
+  <input id="cpOld" type="password" placeholder="原密码" autocomplete="current-password">
+  <input id="cpNew" type="password" placeholder="新密码" autocomplete="new-password">
+  <input id="cpNew2" type="password" placeholder="确认新密码" autocomplete="new-password">
+  <button id="cpGo">确认修改</button>
+  <div class="err" id="cperr"></div>
+</div></div>
+
+<script>
+(function(){var ts=document.getElementById('themeSel');if(ts){ts.value=getTheme();ts.onchange=function(){applyTheme(this.value);};}})();
+function login(){
+  var u=document.getElementById('user').value, p=document.getElementById('pass').value;
+  document.getElementById('err').textContent='登录中…';
+  fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({user:u,pass:p}),credentials:'same-origin'})
+  .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+  .then(function(o){
+    if(o.s===200&&o.j.ok){
+      if(o.j.mustChangePwd){ showChangePwd(u,p); }
+      else { location.href='/'; }
+    }
+    else if(o.s===429){document.getElementById('err').textContent='尝试次数过多，请 10 分钟后再试';}
+    else{document.getElementById('err').textContent='账号或密码不对';}
+  }).catch(function(e){document.getElementById('err').textContent='网络错误：'+e;});
+}
+
+function showChangePwd(u,p){
+  document.getElementById('cpUser').textContent=u;
+  document.getElementById('cpOld').value=p||'';
+  document.getElementById('cpNew').value='';
+  document.getElementById('cpNew2').value='';
+  document.getElementById('cperr').textContent='';
+  document.getElementById('modal').style.display='flex';
+  document.getElementById('cpNew').focus();
+}
+
+document.getElementById('cpGo').onclick=function(){
+  var nu=document.getElementById('cpUser').textContent;
+  var old=document.getElementById('cpOld').value;
+  var nw=document.getElementById('cpNew').value;
+  var nw2=document.getElementById('cpNew2').value;
+  var err=document.getElementById('cperr');
+  if(!nw||nw.length<6){err.textContent='新密码至少 6 位';return;}
+  if(nw!==nw2){err.textContent='两次输入的新密码不一致';return;}
+  err.textContent='提交中…';
+  fetch('/api/change-password',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({old:old,new:nw}),credentials:'same-origin'})
+  .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+  .then(function(o){
+    if(o.s===200&&o.j.ok){ document.getElementById('modal').style.display='none'; location.href='/'; }
+    else { err.textContent=(o.j&&o.j.error)||'修改失败'; }
+  }).catch(function(e){err.textContent='网络错误：'+e;});
+};
+
+document.getElementById('go').onclick=login;
+document.getElementById('pass').addEventListener('keydown',function(e){if(e.key==='Enter')login();});
+</script>
+</body>
+</html>

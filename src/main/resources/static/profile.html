@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>个人信息 · 青春没有售价</title>
+<style>
+:root{--bg:#0b0a1f;--bg2:#141233;--panel:rgba(36,28,71,.55);--panel2:rgba(28,22,58,.85);--line:rgba(168,120,255,.22);--line2:rgba(255,120,200,.4);
+  --tx:#f3ecff;--tx2:#b9a8e6;--tx3:#7d6aa8;--pink:#ff5fa2;--purple:#9b6bff;--cyan:#46e6ff;--orange:#ffb14e;--green:#5cf2a8;--yellow:#ffe066;
+  --land:#241c4d;--landline:#3a2e6e;
+  --g1:rgba(155,107,255,.25);--g2:rgba(255,95,162,.20);--g3:rgba(70,230,255,.14);
+  --cat-eat:#46e6ff;--cat-stay:#5cf2a8;--cat-go:#ff8a4e;--cat-ticket:#ffb14e;--cat-other:#9b6bff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--tx);min-height:100vh;
+  background:radial-gradient(1000px 700px at 12% -10%,var(--g1),transparent 55%),
+             radial-gradient(900px 600px at 92% 110%,var(--g2),transparent 55%),linear-gradient(160deg,var(--bg),var(--bg2));
+  background-attachment:fixed;padding:18px 18px 60px}
+a{color:var(--cyan);text-decoration:none}
+.hd{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.hd h1{font-size:clamp(18px,2.6vw,26px);font-weight:800;letter-spacing:.1em;background:linear-gradient(92deg,var(--cyan),var(--purple) 45%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.userchip{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)}
+.userchip a.out{color:#ff7a8a}
+.wrap{max-width:640px;margin:0 auto}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;backdrop-filter:blur(6px)}
+.sec h3{font-size:14px;color:var(--tx2);letter-spacing:1px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sec h3::before{content:"";width:8px;height:8px;border-radius:50%;background:linear-gradient(92deg,var(--cyan),var(--pink))}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:12px;color:var(--tx2);margin-bottom:6px}
+.fld input{width:100%;height:42px;border-radius:10px;border:1px solid var(--line);background:rgba(11,10,31,.6);color:var(--tx);padding:0 12px;font-size:15px;outline:none}
+.fld input:focus{border-color:var(--pink)}
+.avs{display:flex;flex-wrap:wrap;gap:8px}
+.av{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;border:2px solid var(--line);background:rgba(11,10,31,.5);transition:.15s}
+.av:hover{border-color:var(--pink)}
+.av.on{border-color:var(--cyan);box-shadow:0 0 14px var(--line2);transform:scale(1.06)}
+.preview{display:flex;align-items:center;gap:12px;margin-bottom:16px;background:var(--panel2);border-radius:14px;padding:12px 16px}
+.preview .big{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:30px;flex:0 0 auto}
+.preview .pn{font-size:18px;font-weight:800}
+.preview .ps{font-size:12px;color:var(--tx3);margin-top:2px}
+.row2{display:flex;gap:10px}.row2>div{flex:1}
+.btn{height:44px;border:0;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer;color:#fff;padding:0 18px;
+  background:linear-gradient(92deg,var(--purple),var(--pink))}
+.btn:hover{box-shadow:0 0 20px rgba(255,95,162,.4)}
+.btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--tx2)}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(70,230,255,.16);color:var(--cyan);margin-right:4px}
+.note{font-size:12px;color:var(--tx3);margin-top:8px}
+.err{min-height:16px;font-size:12px;color:#ff8a7a;margin-top:8px}
+.ok{min-height:16px;font-size:12px;color:var(--green);margin-top:8px}
+.accbox{font-size:13px;color:var(--tx2);line-height:1.9}
+</style>
+<script>
+(function(){
+  var THEMES={
+    aurora:{
+      '--bg':'#06121a','--bg2':'#0a1f2b',
+      '--panel':'rgba(16,40,52,.55)','--panel2':'rgba(10,30,42,.85)',
+      '--line':'rgba(80,200,210,.18)','--line2':'rgba(80,230,200,.40)',
+      '--tx':'#e8fbff','--tx2':'#9fd4d8','--tx3':'#5e8a90',
+      '--pink':'#7af0c8','--purple':'#5b8cff','--cyan':'#3fe0d0','--orange':'#ffb05a','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#10232e','--landline':'#1f4a52',
+      '--g1':'rgba(91,140,255,.25)','--g2':'rgba(63,224,208,.20)','--g3':'rgba(92,242,168,.14)',
+      '--cat-eat':'#3fe0d0','--cat-stay':'#5cf2a8','--cat-go':'#5b8cff','--cat-ticket':'#ffb05a','--cat-other':'#9a8cff'
+    },
+    sunset:{
+      '--bg':'#160d12','--bg2':'#241016',
+      '--panel':'rgba(54,30,36,.55)','--panel2':'rgba(40,22,28,.86)',
+      '--line':'rgba(255,170,120,.20)','--line2':'rgba(255,140,90,.40)',
+      '--tx':'#fff1e8','--tx2':'#e3b79c','--tx3':'#a87a64',
+      '--pink':'#ff6f91','--purple':'#ff9e5e','--cyan':'#ffd166','--orange':'#ffb05a','--green':'#7fd99a','--yellow':'#ffe08a',
+      '--land':'#2a161c','--landline':'#5a2e34',
+      '--g1':'rgba(255,140,80,.26)','--g2':'rgba(255,95,140,.20)','--g3':'rgba(255,200,120,.16)',
+      '--cat-eat':'#ffb05a','--cat-stay':'#7fd99a','--cat-go':'#ffd166','--cat-ticket':'#ff6f91','--cat-other':'#c98cff'
+    },
+    neon:{
+      '--bg':'#0b0a1f','--bg2':'#141233',
+      '--panel':'rgba(36,28,71,.55)','--panel2':'rgba(28,22,58,.85)',
+      '--line':'rgba(168,120,255,.22)','--line2':'rgba(255,120,200,.40)',
+      '--tx':'#f3ecff','--tx2':'#b9a8e6','--tx3':'#7d6aa8',
+      '--pink':'#ff5fa2','--purple':'#9b6bff','--cyan':'#46e6ff','--orange':'#ffb14e','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#241c4d','--landline':'#3a2e6e',
+      '--g1':'rgba(155,107,255,.25)','--g2':'rgba(255,95,162,.20)','--g3':'rgba(70,230,255,.14)',
+      '--cat-eat':'#46e6ff','--cat-stay':'#5cf2a8','--cat-go':'#ff8a4e','--cat-ticket':'#ffb14e','--cat-other':'#9b6bff'
+    }
+  };
+  var KEY='screenTheme';
+  function applyTheme(n){var t=THEMES[n]||THEMES.aurora,r=document.documentElement;for(var k in t){if(t.hasOwnProperty(k))r.style.setProperty(k,t[k]);}try{localStorage.setItem(KEY,n);}catch(e){}try{window.dispatchEvent(new CustomEvent('themechange',{detail:{name:n}}));}catch(e){}}
+  function getTheme(){try{return localStorage.getItem(KEY)||'aurora';}catch(e){return 'aurora';}}
+  window.THEMES=THEMES;window.applyTheme=applyTheme;window.getTheme=getTheme;
+  applyTheme(getTheme());
+})();
+</script>
+</head>
+<body>
+<div class="hd"><a href="/">← 返回大屏</a><h1>个人信息</h1><select id="themeSel" style="height:34px;padding:0 10px;font-size:13px;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--tx)"><option value="aurora">极光蓝绿</option><option value="sunset">暖阳橙金</option><option value="neon">霓虹紫粉</option></select><span class="userchip" id="uchip"><a class="out" href="/logout">退出登录</a></span></div>
+<div class="wrap">
+  <div class="sec">
+    <h3>头像 · 代号 · 昵称</h3>
+    <div class="preview">
+      <div class="big" id="pvAv">👤</div>
+      <div>
+        <div class="pn" id="pvName">—</div>
+        <div class="ps" id="pvSub">—</div>
+      </div>
+    </div>
+    <div class="fld"><label>选择头像图标</label><div class="avs" id="avs"></div></div>
+    <div class="fld"><label>代号（在榜单/同行人中优先展示）</label><input id="inCodename" maxlength="40" placeholder="例如：夜行者 / 山的那边"></div>
+    <div class="fld"><label>昵称 / 显示名</label><input id="inDisplay" maxlength="60"></div>
+    <button class="btn" id="saveProfile">💾 保存资料</button>
+    <div class="ok" id="profOk"></div>
+    <div class="err" id="profErr"></div>
+    <div class="note">未设置代号时，对外展示用昵称；账号仅用于登录。</div>
+  </div>
+
+  <div class="sec">
+    <h3>账号与所属</h3>
+    <div class="accbox" id="accInfo">加载中…</div>
+  </div>
+
+  <div class="sec">
+    <h3>修改密码</h3>
+    <div class="fld"><label>原密码</label><input id="inOld" type="password" autocomplete="current-password"></div>
+    <div class="row2">
+      <div class="fld"><label>新密码</label><input id="inNew" type="password" autocomplete="new-password"></div>
+      <div class="fld"><label>确认新密码</label><input id="inNew2" type="password" autocomplete="new-password"></div>
+    </div>
+    <button class="btn ghost" id="btnPwd">修改密码</button>
+    <div class="ok" id="pwdOk"></div>
+    <div class="err" id="pwdErr"></div>
+  </div>
+</div>
+
+<script>
+var AVATARS=['🐰','🦊','🐼','🐯','🦁','🐨','🐸','🦄','🐳','🦉','🐝','🦋','🌵','🍑','🚗','✈️','⛰️','🌊','🔥','⭐'];
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var ME=null,curAv='';
+function drawAvs(){
+  var h='';AVATARS.forEach(function(a){h+='<div class="av'+(a===curAv?' on':'')+'" data-a="'+a+'">'+a+'</div>';});
+  $('avs').innerHTML=h;
+  Array.prototype.forEach.call($('avs').querySelectorAll('.av'),function(el){el.onclick=function(){curAv=el.getAttribute('data-a');drawAvs();pv();};});
+}
+function pv(){var nm=(curAv?' '+curAv+' ':'')+(ME&&ME.codename?ME.codename:(ME?ME.displayName:''))||'未命名';$('pvAv').textContent=curAv||'👤';$('pvName').textContent=ME?((ME.codename||ME.displayName||ME.username)+' '+(ME.username?'('+ME.username+')':'')):'—';$('pvSub').textContent=(ME&&ME.roles&&ME.roles.length?'角色：'+ME.roles.join(' / '):'')+(ME&&ME.defaultTeamId?' · 默认团队已配置':'');}
+async function load(){
+  var r=await fetch('/api/me');if(r.status===401){location.href='/login';return;}
+  ME=await r.json();
+  if(ME.isFileAdmin){$('inCodename').disabled=true;$('inDisplay').disabled=true;$('saveProfile').disabled=true;$('profOk').textContent='';$('profErr').textContent='管理员账号资料由系统维护，仅可修改密码。';}
+  curAv=ME.avatar||'';
+  $('inCodename').value=ME.codename||'';
+  $('inDisplay').value=ME.displayName||ME.username||'';
+  drawAvs();pv();
+  var teams='';
+  var ids=ME.teamIds||[];
+  if(ids.length){try{var tr=await fetch('/api/teams');var tl=await tr.json();var mm=new Set(ids.map(String));teams=(tl||[]).filter(function(t){return mm.has(String(t.id));}).map(function(t){return t.name+(String(t.id)===String(ME.defaultTeamId)?'（默认）':'');}).join('、')||'—';}catch(e){teams='—';}}
+  else teams='（未加入任何团队）';
+  $('accInfo').innerHTML='<div><b>账号：</b>'+esc(ME.username)+'</div><div><b>角色：</b>'+(ME.roles||[]).map(esc).join(' / ')||'无'+'</div><div><b>所属团队：</b>'+esc(teams)+'</div>';
+}
+$('saveProfile').onclick=async function(){
+  $('profErr').textContent='';$('profOk').textContent='';
+  var body={codename:$('inCodename').value.trim(),displayName:$('inDisplay').value.trim(),avatar:curAv};
+  try{
+    var r=await fetch('/api/me/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok){var j=await r.json().catch(()=>({}));$('profErr').textContent=(j&&(j.message||j.error))||'保存失败';return;}
+    ME=await r.json();pv();$('profOk').textContent='资料已保存 ✓';
+  }catch(e){$('profErr').textContent='网络错误：'+e;}
+};
+$('btnPwd').onclick=async function(){
+  $('pwdErr').textContent='';$('pwdOk').textContent='';
+  var old=$('inOld').value,nw=$('inNew').value,n2=$('inNew2').value;
+  if(!nw||nw.length<6){$('pwdErr').textContent='新密码至少 6 位';return;}
+  if(nw!==n2){$('pwdErr').textContent='两次新密码不一致';return;}
+  try{
+    var r=await fetch('/api/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old:old,new:nw})});
+    var j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok){$('pwdOk').textContent='密码已修改 ✓';$('inOld').value='';$('inNew').value='';$('inNew2').value='';}
+    else{$('pwdErr').textContent=(j&&j.error)||'修改失败';}
+  }catch(e){$('pwdErr').textContent='网络错误：'+e;}
+};
+(function(){var ts=document.getElementById('themeSel');if(ts){ts.value=getTheme();ts.onchange=function(){applyTheme(this.value);};}})();
+load();
+</script>
+</body>
+</html>

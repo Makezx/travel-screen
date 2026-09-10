@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="IXwrh6HbX6fzBro50917IQ">
+<head data-page-node-id="hOskxGHFFvczrA0FmqXfDV">
+<meta charset="utf-8" data-page-node-id="EGoqrHThERgeULpzEH8OXu">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="IcC8EG0S0DhoA1pB4aXIQU">
+<title>数据维护 · 青春没有售价</title>
+<style>
+:root{--bg:#0b0a1f;--bg2:#141233;--panel:rgba(36,28,71,.55);--panel2:rgba(28,22,58,.85);--line:rgba(168,120,255,.22);--line2:rgba(255,120,200,.4);
+  --tx:#f3ecff;--tx2:#b9a8e6;--tx3:#7d6aa8;--pink:#ff5fa2;--purple:#9b6bff;--cyan:#46e6ff;--orange:#ffb14e;--green:#5cf2a8;--yellow:#ffe066;
+  --land:#241c4d;--landline:#3a2e6e;
+  --g1:rgba(155,107,255,.22);--g2:rgba(255,95,162,.18);--g3:rgba(70,230,255,.14);
+  --cat-eat:#46e6ff;--cat-stay:#5cf2a8;--cat-go:#ff8a4e;--cat-ticket:#ffb14e;--cat-other:#9b6bff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--tx);min-height:100vh;
+  background:radial-gradient(1000px 700px at 12% -10%,var(--g1),transparent 55%),
+             radial-gradient(900px 600px at 92% 110%,var(--g2),transparent 55%),linear-gradient(160deg,var(--bg),var(--bg2));
+  background-attachment:fixed;padding:14px 18px 50px}
+a{color:var(--cyan);text-decoration:none}
+.hd{display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.userchip{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)}
+.userchip .un{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.userchip a{color:var(--cyan);text-decoration:none;font-size:12px}
+.userchip a.out{color:#ff7a8a}
+.hd h1{font-size:clamp(18px,2.6vw,26px);font-weight:800;letter-spacing:.1em;background:linear-gradient(92deg,var(--cyan),var(--purple) 45%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel2);color:var(--tx2);height:38px;padding:0 18px;border-radius:999px;font-size:14px;cursor:pointer;transition:.15s}
+.tab:hover{border-color:var(--pink)}
+.tab.on{background:linear-gradient(92deg,var(--purple),var(--pink));border-color:transparent;color:#fff;font-weight:700}
+.btn{border:1px solid var(--line2);background:var(--panel2);color:var(--tx);height:38px;padding:0 16px;border-radius:10px;font-size:14px;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--pink);box-shadow:0 0 14px rgba(255,95,162,.3)}
+.btn.p{background:linear-gradient(92deg,var(--purple),var(--pink));border-color:transparent;color:#fff;font-weight:700}
+.btn.g{background:linear-gradient(92deg,#2bbf7a,#5cf2a8);border-color:transparent;color:04210f;font-weight:700}
+.btn.ghost{background:transparent}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:16px;backdrop-filter:blur(6px)}
+.sec h3{font-size:14px;color:var(--tx2);letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec h3::before{content:"";width:8px;height:8px;border-radius:50%;background:linear-gradient(92deg,var(--cyan),var(--pink))}
+.wrap{overflow:auto;-webkit-overflow-scrolling:touch}
+table.grid{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+.grid th{position:sticky;top:0;background:var(--panel2);color:var(--tx3);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-weight:600;white-space:nowrap}
+.grid td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.05)}
+.grid input,.grid select{width:100%;height:32px;border-radius:7px;border:1px solid var(--line);background:rgba(11,10,31,.6);color:var(--tx);padding:0 8px;font-size:13px;outline:none}
+.grid input:focus,.grid select:focus{border-color:var(--pink)}
+.rowact{display:flex;gap:6px;white-space:nowrap;flex-wrap:nowrap}
+.mini{height:30px;padding:0 10px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);cursor:pointer;font-size:12px}
+.mini.d{color:var(--pink);border-color:rgba(255,95,162,.4)}
+.mini.s{color:var(--green);border-color:rgba(92,242,168,.4)}
+.mini.t{color:var(--cyan);border-color:rgba(70,230,255,.4)}
+.mini:hover{box-shadow:0 0 10px rgba(255,95,162,.25)}
+.selrow{background:rgba(255,95,162,.12)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:10px 18px;font-size:13px;opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:80vw}
+.toast.show{opacity:1}
+.hint{font-size:12px;color:var(--tx3);margin-top:8px}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(70,230,255,.16);color:var(--cyan);margin:1px}
+.tag.seed{background:rgba(255,177,78,.18);color:var(--orange)}
+.hidden{display:none!important}
+.ppick{display:flex;flex-wrap:wrap;gap:3px 9px;max-width:230px}
+.pchk{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--tx);cursor:pointer;white-space:nowrap}
+.pchk input{width:14px;height:14px}
+.muted{color:var(--tx3);font-size:12px}
+.pos{color:var(--green);font-weight:700}
+.neg{color:var(--pink);font-weight:700}
+.trans{list-style:none;padding:0;margin:6px 0}
+.trans li{font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:rgba(11,10,31,.4)}
+.aa h4{margin:12px 0 6px;font-size:14px;color:var(--tx2)}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(6,5,18,.6);display:none;align-items:center;justify-content:center;z-index:40}
+#modalCard{width:440px;max-width:94vw;max-height:88vh;overflow:auto;background:var(--panel2);border:1px solid var(--line2);border-radius:16px;padding:18px}
+#modalCard h2{font-size:18px;font-weight:800;margin-bottom:12px;background:linear-gradient(92deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.fld{margin-bottom:10px}
+.fld label{display:block;font-size:12px;color:var(--tx2);margin-bottom:4px}
+.fld input,.fld select{width:100%;height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(11,10,31,.6);color:var(--tx);padding:0 10px;font-size:14px;outline:none}
+.fld input:focus,.fld select:focus{border-color:var(--pink)}
+.checks{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto}
+.checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx);cursor:pointer}
+.checks input{width:16px;height:16px}
+.modalbar{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+/* team members drawer */
+#teamDrawer{position:fixed;top:0;right:0;height:100%;width:min(440px,92vw);background:var(--panel2);border-left:1px solid var(--line2);transform:translateX(100%);transition:.28s;z-index:30;overflow:auto;padding:20px}
+#teamDrawer.open{transform:translateX(0);box-shadow:-10px 0 40px rgba(0,0,0,.5)}
+.x{position:absolute;right:16px;top:16px;cursor:pointer;color:var(--tx3);font-size:22px;line-height:1}
+.member{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.member .nm{flex:1}
+/* photo panel */
+.photo-grid{display:flex;flex-wrap:wrap;gap:12px}
+.ph-card{width:186px;background:rgba(11,10,31,.5);border:1px solid var(--line);border-radius:12px;padding:8px}
+.ph-card img{width:100%;height:120px;object-fit:cover;border-radius:8px;display:block;background:rgba(0,0,0,.3)}
+.ph-act{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+</style>
+<script>
+(function(){
+  var THEMES={
+    aurora:{
+      '--bg':'#06121a','--bg2':'#0a1f2b',
+      '--panel':'rgba(16,40,52,.55)','--panel2':'rgba(10,30,42,.85)',
+      '--line':'rgba(80,200,210,.18)','--line2':'rgba(80,230,200,.40)',
+      '--tx':'#e8fbff','--tx2':'#9fd4d8','--tx3':'#5e8a90',
+      '--pink':'#7af0c8','--purple':'#5b8cff','--cyan':'#3fe0d0','--orange':'#ffb05a','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#10232e','--landline':'#1f4a52',
+      '--g1':'rgba(91,140,255,.22)','--g2':'rgba(63,224,208,.18)','--g3':'rgba(92,242,168,.14)',
+      '--cat-eat':'#3fe0d0','--cat-stay':'#5cf2a8','--cat-go':'#5b8cff','--cat-ticket':'#ffb05a','--cat-other':'#9a8cff'
+    },
+    sunset:{
+      '--bg':'#160d12','--bg2':'#241016',
+      '--panel':'rgba(54,30,36,.55)','--panel2':'rgba(40,22,28,.86)',
+      '--line':'rgba(255,170,120,.20)','--line2':'rgba(255,140,90,.40)',
+      '--tx':'#fff1e8','--tx2':'#e3b79c','--tx3':'#a87a64',
+      '--pink':'#ff6f91','--purple':'#ff9e5e','--cyan':'#ffd166','--orange':'#ffb05a','--green':'#7fd99a','--yellow':'#ffe08a',
+      '--land':'#2a161c','--landline':'#5a2e34',
+      '--g1':'rgba(255,140,80,.24)','--g2':'rgba(255,95,140,.20)','--g3':'rgba(255,200,120,.16)',
+      '--cat-eat':'#ffb05a','--cat-stay':'#7fd99a','--cat-go':'#ffd166','--cat-ticket':'#ff6f91','--cat-other':'#c98cff'
+    },
+    neon:{
+      '--bg':'#0b0a1f','--bg2':'#141233',
+      '--panel':'rgba(36,28,71,.55)','--panel2':'rgba(28,22,58,.85)',
+      '--line':'rgba(168,120,255,.22)','--line2':'rgba(255,120,200,.40)',
+      '--tx':'#f3ecff','--tx2':'#b9a8e6','--tx3':'#7d6aa8',
+      '--pink':'#ff5fa2','--purple':'#9b6bff','--cyan':'#46e6ff','--orange':'#ffb14e','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#241c4d','--landline':'#3a2e6e',
+      '--g1':'rgba(155,107,255,.22)','--g2':'rgba(255,95,162,.18)','--g3':'rgba(70,230,255,.14)',
+      '--cat-eat':'#46e6ff','--cat-stay':'#5cf2a8','--cat-go':'#ff8a4e','--cat-ticket':'#ffb14e','--cat-other':'#9b6bff'
+    }
+  };
+  var KEY='screenTheme';
+  function applyTheme(n){var t=THEMES[n]||THEMES.aurora,r=document.documentElement;for(var k in t){if(t.hasOwnProperty(k))r.style.setProperty(k,t[k]);}try{localStorage.setItem(KEY,n);}catch(e){}try{window.dispatchEvent(new CustomEvent('themechange',{detail:{name:n}}));}catch(e){}}
+  function getTheme(){try{return localStorage.getItem(KEY)||'aurora';}catch(e){return 'aurora';}}
+  window.THEMES=THEMES;window.applyTheme=applyTheme;window.getTheme=getTheme;
+  applyTheme(getTheme());
+})();
+</script>
+</head>
+<body data-page-node-id="YCH3RUJ64YCg9PdyDQPxoT">
+<div class="hd" data-page-node-id="uJHreR4QNP8SCI6fz4DZdU"><a href="/" data-page-node-id="D30O6VWBnOsNGUKY6RVVyP">← 大屏</a><a href="/ai" data-page-node-id="3pJ5dztIy40VtTMP9i9tNw">AI 规划</a><h1 data-page-node-id="vUGKxEcfYkXjC8J6VxJQrQ">数据维护 · 像 Excel 一样编辑</h1><select id="themeSel" class="btn" style="height:38px;padding:0 12px;font-size:13px;cursor:pointer"><option value="aurora">极光蓝绿</option><option value="sunset">暖阳橙金</option><option value="neon">霓虹紫粉</option></select><span class="userchip" id="u" data-page-node-id="TyV2bj9B9IzdTX0Gud5Pad"></span></div>
+
+<div class="tabs" data-page-node-id="yyuD9BKOvavTUp8BGbbBQD">
+  <button class="tab on" data-tab="trips" data-page-node-id="m8iNkAm9cOdHruKrUrPdy9">行程</button>
+  <button class="tab" data-tab="users" data-page-node-id="96gTssIsPJpC878cwcyTaj">用户</button>
+  <button class="tab" data-tab="roles" data-page-node-id="IiLjg5jOcdUOaIcb8iqaY3">角色</button>
+  <button class="tab" data-tab="teams" data-page-node-id="koAem5eGMB8vLIblvnq9ka">团队</button>
+</div>
+
+<!-- 行程 / 活动（合并树视图：大行程 + 未分组行程） -->
+<section id="tab-trips" data-page-node-id="lVJXf7kRIuHqyV6FpPp50X">
+<div class="bar" data-page-node-id="hhWEjtQ10Rg6DBemby4HBC">
+  <button class="btn" id="exp" data-page-node-id="uaivh2R40CQlLz1Q15HpMP">⬇ 导出 xlsx</button>
+  <label class="btn" for="imp" data-page-node-id="gCCsTRqEqzojFVREDw1AlA">⬆ 导入 xlsx（重建）</label>
+  <input type="file" id="imp" accept=".xlsx" style="display:none" data-page-node-id="tAxk6c6k4JnwKHN79mgGZn">
+  <button class="btn p" id="addAct" data-page-node-id="8yqcBDVjiHXqCCNbCB90eH">＋ 新建大行程</button>
+  <button class="btn" id="addTrip" data-page-node-id="rIYpnEIewfn4rQwYGhzfpo">＋ 新增行程</button>
+  <span class="hint" data-page-node-id="Zaw7041ADQimmACM2QZJGY">导入会清空并整体重建数据。大行程可协作（成员四档角色）；未分组行程为独立 leaf 行程。</span>
+</div>
+<div class="sec" data-page-node-id="N1cdcGXoSLYO80wTe5XMfV">
+  <h3 data-page-node-id="dDagegJxYbhSaN3aFw7nZH">活动 / 大行程（点击 ▸ 展开其下子行程）</h3>
+  <div class="wrap" data-page-node-id="GBoElIaxJCE9qiQLA1Qcso"><table class="grid" id="actTbl" data-page-node-id="dBZdvrT520gwn29IB22A9F">
+    <thead data-page-node-id="7lVPoCWPZkS5q8jYQNwKib"><tr data-page-node-id="PAHWDwDBCST0pa9DpbKEG7"><th style="width:4%">▸</th><th style="width:22%">大行程名</th><th style="width:12%">团队</th><th style="width:7%">子行程</th><th style="width:10%">金额</th><th style="width:11%">我的角色</th><th style="width:8%">状态</th><th style="width:26%">操作</th></tr></thead>
+    <tbody data-page-node-id="BFV4JFSgYTudTD0doz6HPV"></tbody>
+  </table></div>
+</div>
+<div class="sec" data-page-node-id="H9ZeDEaxDWJLaKNb11pM8M">
+  <h3 data-page-node-id="erqXj1JZTVbAAFDRCYTxpT">未分组行程（点击一行展开其消费明细）</h3>
+  <div class="wrap" data-page-node-id="YNAoZlP61cPcy7yGrDZHhe"><table class="grid" id="tripTbl" data-page-node-id="CzDi2Q4plXdT2feAmIHwCy">
+    <thead data-page-node-id="vuCe8wHyLqUbug8bWK477V"><tr data-page-node-id="Q4wkie4o0PypThtLCW0bLO"><th style="width:18%" data-page-node-id="xoEMmkTYOmn10vM8ErvMOJ">标题</th><th style="width:10%" data-page-node-id="ygMGHumWM4czF6xvWpX1qI">分表名</th><th style="width:12%" data-page-node-id="H8mPq4HusZURH7HqQhuWmM">日期</th><th style="width:6%" data-page-node-id="9iAau3AtNJokkXaOFnwLSZ">年份</th><th style="width:8%" data-page-node-id="tgkRarBITglLjcq3R165Vn">状态</th><th style="width:5%" data-page-node-id="rOLmQs76I2VvoyIONLH8HQ">人数</th><th style="width:17%" data-page-node-id="aG7pZgPdipu4LTXGjFjVh7">人员(、分隔)</th><th style="width:9%" data-page-node-id="5pQhpUo9Fg0jfG1DbIYeaB">城市(、分隔)</th><th style="width:15%" data-page-node-id="67YKKBnBOdpPy7FdmtX7OT">操作</th></tr></thead>
+    <tbody data-page-node-id="JuWVQeyavkWMnHX70snYdy"></tbody>
+  </table></div>
+</div>
+<div class="sec hidden" id="itemSec" data-page-node-id="eXh5Lb8nHsWLumavdqtbb6">
+  <h3 data-page-node-id="5TrZsMHIT8rWyQslv929yP">消费明细 · <span id="itemTrip" data-page-node-id="tAVGvo4nTjBxS53LkY5Jc4"></span></h3>
+  <div class="bar" style="margin-bottom:10px" data-page-node-id="3KhQGLnDcTwtXRjSAbtsGy"><button class="btn" id="addItem" data-page-node-id="jmYEPGZXRiJ9nGgYHdxwMM">＋ 新增明细</button><button class="btn g" id="aaBtn" data-page-node-id="aaBtnNode">🧮 AA 分摊</button><button class="btn" id="photoBtn">📷 照片</button></div>
+  <div class="wrap" data-page-node-id="HH8WpQZaA3JFM9Qfh26UUd"><table class="grid" id="itemTbl" data-page-node-id="xUADRCK2B6lIkIbm08b3OG">
+    <thead data-page-node-id="kMaQGwx9tDz5wgZCaGub8b"><tr data-page-node-id="T7aQPeOA6mEbTQ5IU2sFdt"><th style="width:11%" data-page-node-id="zsE02PuMQdSwvkjcodmDN6">日期</th><th style="width:8%" data-page-node-id="uoKhTVVLMMYm2cSZAtHg0V">类别</th><th style="width:22%" data-page-node-id="RcRRyFMRt7jVkwGbwUm6ua">项目</th><th style="width:10%" data-page-node-id="WgqZho0huQ904sRC652bFF">金额</th><th style="width:11%" data-page-node-id="NVNbJPYzGpy62rn0ApikGb">付款人</th><th style="width:15%" data-page-node-id="aaParticipantsCol">分摊人</th><th style="width:13%" data-page-node-id="1QQQtKGh0c53ORlR605Qdt">备注</th><th style="width:10%" data-page-node-id="qaT1KvEd8TsTm5Po8gTwuq">操作</th></tr></thead>
+    <tbody data-page-node-id="i3AlVG81MEWFAeXtCNpqGz"></tbody>
+  </table></div>
+  <div class="aa" id="aaPanel" style="display:none"><h4>AA 分摊结算</h4><div id="aaBody"></div></div>
+  <div id="photoPanel" style="display:none">
+    <h4>行程照片</h4>
+    <div class="bar" style="margin-bottom:10px">
+      <label class="btn p" for="photoFile">＋ 上传照片</label>
+      <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none">
+      <span class="hint">支持多选，jpg/png/webp/gif，单张 ≤10MB；「AI 识别」可自动回填城市与说明。</span>
+    </div>
+    <div id="photoGrid" class="photo-grid"></div>
+  </div>
+</div>
+</section>
+
+<!-- 用户 -->
+<section id="tab-users" class="hidden" data-page-node-id="gdQ8CgggEW4wuyFKEc78El">
+<div class="bar" data-page-node-id="8HOXHjLVXuQ1hTGEudarmH">
+  <button class="btn p" id="addUser" data-page-node-id="vZA0tzCBbWT2AH2zmIk8Pr">＋ 新增用户</button>
+  <button class="btn g" id="batchUsers" data-page-node-id="BNuTldMM7uNBITBEK98FNq">⚡ 批量建号（来自出行）</button>
+  <span class="hint" data-page-node-id="iSg3aafHfCDxb86HESiLfW">账号格式 名字@travel.cn；初始密码 user123，首次登录强制改密。</span>
+</div>
+<div class="sec" data-page-node-id="vhECuFgRdYB7XXrAkKlBd6">
+  <h3 data-page-node-id="zWu7PENxPa2AILDnMKsJQj">用户</h3>
+  <div class="wrap" data-page-node-id="c9bPJCs6DAiVkVXW18ndD5"><table class="grid" id="userTbl" data-page-node-id="1CsVBgDwywAIvU8iaoeOoJ">
+    <thead data-page-node-id="vDDwBvXHs5Mq8q9kKARu1O"><tr data-page-node-id="u147I4F70ZOFV28M9D4MkR"><th style="width:6%" data-page-node-id="pVaXi7zIARjO9KD5EydsDa">ID</th><th style="width:16%" data-page-node-id="TkQHKa4ktDHwp0FFOOdKpX">账号</th><th style="width:12%" data-page-node-id="Cz37wDyvFJ8orVe27UIBuX">显示名</th><th style="width:8%" data-page-node-id="7caHvlktG7t7G9lErxbFc8">状态</th><th style="width:13%" data-page-node-id="3GyaZhjYV6ONiI07QWuRNj">角色</th><th style="width:14%" data-page-node-id="GPJBEVbjm2CfnrvOPA20l7">团队</th><th style="width:10%" data-page-node-id="UmgXMLVG2iXeJpBFREw9hg">创建时间</th><th style="width:21%" data-page-node-id="FApSZRWaCihNbJ6z7jZc1N">操作</th></tr></thead>
+    <tbody data-page-node-id="bDUACfg2mk0kCXrAQ02xRL"></tbody>
+  </table></div>
+</div>
+</section>
+
+<!-- 角色 -->
+<section id="tab-roles" class="hidden" data-page-node-id="UAH8B88oYRQFHKeGEI8g2W">
+<div class="bar" data-page-node-id="uGmE5HypKbz3Bt9ggZII7U">
+  <button class="btn p" id="addRole" data-page-node-id="kFyJAitxmgopx4Uu6p49KC">＋ 新增角色</button>
+  <span class="hint" data-page-node-id="BpNovmml4HPwdp4y70LB1n">角色含权限集合；SUPER_ADMIN 仅文件 admin 默认持有，建议不要随意新建同名角色。</span>
+</div>
+<div class="sec" data-page-node-id="50dP5N8akljFCUOaFkmAPG">
+  <h3 data-page-node-id="BYnrqMRoAhitIO7CqQuC0T">角色</h3>
+  <div class="wrap" data-page-node-id="7546tpDtd5oaJcXX5qZS6h"><table class="grid" id="roleTbl" data-page-node-id="AlyQ3HKDgvfsIgyjU0HvJZ">
+    <thead data-page-node-id="ZnUwJEMqMwe6C4QQvQDiwD"><tr data-page-node-id="YmILRLGn6sRG0RTuRVtsGb"><th style="width:6%" data-page-node-id="PE3mK6uVWIo4vQMGDVcSUx">ID</th><th style="width:16%" data-page-node-id="RFr9Ds5g0vJJGdipHzPHK4">角色名</th><th style="width:14%" data-page-node-id="3qtLVNHLMdEJSXmatSys8X">编码</th><th style="width:48%" data-page-node-id="zQUj3HfQrrHPl5TkONGc3i">权限</th><th style="width:16%" data-page-node-id="gpDAlTeoB6V8MiDqkRcG4S">操作</th></tr></thead>
+    <tbody data-page-node-id="VgV6K5k8I6Zh6xEArPq1uh"></tbody>
+  </table></div>
+</div>
+</section>
+
+<!-- 团队 -->
+<section id="tab-teams" class="hidden" data-page-node-id="ooWUuNskOAl2cYzciZle5m">
+<div class="bar" data-page-node-id="QkVBwDOyYrHoRZ3Z6BraUw">
+  <button class="btn p" id="addTeam" data-page-node-id="YCiiHFgMAxF9DHpRE2wxxW">＋ 新增团队</button>
+  <span class="hint" data-page-node-id="g00e6tnpbkaMdZVq5mWNjI">删除团队会解除其用户关联，并把该团队行程 team_id 置空（落回最新团队兜底）。</span>
+</div>
+<div class="sec" data-page-node-id="fNiQoiLvZEhCNAwOMhIS1r">
+  <h3 data-page-node-id="a4voBQ23QQQU5a7obZfHEA">团队</h3>
+  <div class="wrap" data-page-node-id="qpKh1UHym41rNoljgePyrC"><table class="grid" id="teamTbl" data-page-node-id="9BJ0oYtDsRZEOhAh1aAjBQ">
+    <thead data-page-node-id="ptZalNwUn603PP0baYM9di"><tr data-page-node-id="43gWqY99qL830zfRIFEoT2"><th style="width:6%" data-page-node-id="lFG0JkXxCz3X7FHxXBEO49">ID</th><th style="width:18%" data-page-node-id="qcpGnW2L6BhE1hE8atTvqE">团队名</th><th style="width:22%" data-page-node-id="HqeWP8LgwjZ07TAtxQYKox">描述</th><th style="width:8%" data-page-node-id="yZZxXHZbgI53DLh2t6WxrY">成员</th><th style="width:14%" data-page-node-id="IFTXlY22UrrpGODgJ5OWHC">创建时间</th><th style="width:8%" data-page-node-id="xTxFKn0zQcmyV2eXzwvOCN">默认</th><th style="width:24%" data-page-node-id="5SRapYuDq8iA1duJvIPiL6">操作</th></tr></thead>
+    <tbody data-page-node-id="LCbE3Zf7pdhmgW4G3FOmUI"></tbody>
+  </table></div>
+</div>
+</section>
+
+<div class="toast" id="toast" data-page-node-id="e3umwXd2bRfD2IACOTWZXo"></div>
+
+<!-- 通用弹层 -->
+<div id="modal" data-page-node-id="ZP38GfGvjl8wyPKrZpkavH"><div id="modalCard" data-page-node-id="aooo07QZgh8GiiehFBPXAH">
+  <span class="x" id="modalX" data-page-node-id="vHz1KS8LjheG0M5lbH3ver">×</span>
+  <h2 id="modalTitle" data-page-node-id="mK31kFQyuXfuhE2sYeetkb"></h2>
+  <div id="modalBody" data-page-node-id="cRVmvjNtpFNbHsyfztfRbI"></div>
+  <div class="modalbar" data-page-node-id="Nk6XghriatrqCGocjpXICc"><button class="btn ghost" id="modalCancel" data-page-node-id="ny4U1F6eFravXwDB2oxC7F">取消</button><button class="btn p" id="modalOk" data-page-node-id="v9B9tpMOPhiCCRL8ufrK4D">保存</button></div>
+</div></div>
+
+<!-- 团队成员抽屉 -->
+<div id="teamDrawer" data-page-node-id="PG7U9LNegbkp0cSNlGn5AQ">
+  <span class="x" id="teamDrawerX" data-page-node-id="RhMKqM0yuE4oJRDbP3KC85">×</span>
+  <h2 id="teamDrawerTitle" data-page-node-id="5TfKTNbmeGIAUSbPHs7goz"></h2>
+  <div id="teamDrawerBody" data-page-node-id="JXZoVfq91TsF0sMt7YJxp6"></div>
+</div>
+
+<script>
+var TRIPS=[],curTrip=null,CUR_PEOPLE=[];
+var TEAMS={}, ROLES=[];
+var PERMS=[['VIEW_SCREEN','查看大屏'],['MANAGE_TRIP','行程维护'],['MANAGE_USER','用户管理'],['MANAGE_ROLE','角色管理'],['MANAGE_TEAM','团队管理']];
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s);}
+var ME=null;
+function hasPerm(p){return ME&&(ME.permissions||[]).indexOf(p)>=0;}
+/* V3：按权限显隐 tab —— 活动级维护者只有活动/行程权限，看不到用户/角色/团队 */
+function applyTabVisibility(){
+  var tabs=document.querySelectorAll('.tab');
+  var map={trips:true,activities:true,users:hasPerm('MANAGE_USER'),roles:hasPerm('MANAGE_ROLE'),teams:hasPerm('MANAGE_TEAM')};
+  tabs.forEach(function(b){
+    var k=b.getAttribute('data-tab');
+    if(map[k]===false)b.style.display='none';
+  });
+  // 若当前 tab 被隐藏，回落到第一个可见 tab
+  var on=document.querySelector('.tab.on');
+  if(on&&on.style.display==='none'){
+    var first=Array.prototype.find.call(tabs,function(b){return b.style.display!=='none';});
+    if(first)first.click();
+  }
+}
+fetch('/api/me').then(function(r){return r.ok?r.json():null;}).then(function(me){
+  ME=me;
+  if(me)$('u').innerHTML='<span class="un">'+(me.avatar||'👤')+' '+(me.codename||me.displayName||me.username)+'</span><a href="/profile">个人</a><a class="out" href="/logout">退出</a>';
+  applyTabVisibility();
+}).catch(function(){applyTabVisibility();});
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
+function fmtTime(d){if(!d)return '';try{return new Date(d).toLocaleString('zh-CN',{hour12:false});}catch(e){return String(d);}}
+
+/* ---------------- 日期 / 人员 小工具 ---------------- */
+/* HTML 属性转义：人员名可能含引号，避免拼串破坏结构 */
+function pesc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+/* 展示格式（yyyy.M.d / yyyy-MM-dd / yyyy/M/d / yyyy年M月d日）→ 日期控件值 yyyy-MM-dd；无法解析返回 '' */
+function toPickerVal(v){
+  var s=String(v==null?'':v).trim();
+  if(!s)return '';
+  /* 必须整体匹配：避免 "2023.10.13-10.15" 这类区间值被截断成单日 */
+  var m=s.match(/^(\d{4})[-./年](\d{1,2})[-./月](\d{1,2})日?$/);
+  if(!m)return '';
+  var mo=Number(m[2]),dy=Number(m[3]);
+  if(mo<1||mo>12||dy<1||dy>31)return '';
+  return m[1]+'-'+(mo<10?'0'+mo:mo)+'-'+(dy<10?'0'+dy:dy);
+}
+/* 日期控件值 yyyy-MM-dd → 展示格式 yyyy.M.d（去前导零）；非标准值原样返回，保住存量脏数据 */
+function toDispVal(v){
+  var s=String(v==null?'':v).trim();
+  var m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(!m)return s;
+  return Number(m[1])+'.'+Number(m[2])+'.'+Number(m[3]);
+}
+/* 当前登录用户的中文显示名 */
+function meName(){return (ME&&(ME.displayName||ME.codename||ME.username))||'';}
+var PEOPLE_HINT='行程人员用于大屏同行人展示与后续 AA 分摊';
+/* 人员选择器：下拉 + 添加 + 可删除 chips；onChange(list) 在增删后回调；返回 {get,set} */
+function buildPeoplePicker(host,options,selected,onChange){
+  var list=(selected||[]).slice();
+  host.innerHTML='<div style="display:flex;gap:6px;align-items:center">'+
+    '<select data-pp="sel" style="flex:1;height:34px;border-radius:8px;border:1px solid var(--line);background:rgba(11,10,31,.6);color:var(--tx);padding:0 8px;font-size:13px;outline:none"></select>'+
+    '<button type="button" class="mini" data-pp="add">添加</button></div>'+
+    '<div data-pp="chips" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px"></div>'+
+    '<div class="hint">'+PEOPLE_HINT+'</div>';
+  var sel=host.querySelector('[data-pp=sel]');
+  (options||[]).forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  var chips=host.querySelector('[data-pp=chips]');
+  function fire(){if(typeof onChange==='function')onChange(list.slice());}
+  function render(){
+    chips.innerHTML='';
+    if(!list.length){chips.innerHTML='<span class="hint" style="margin:0">暂未选择人员</span>';}
+    list.forEach(function(nm,i){
+      var sp=document.createElement('span');
+      sp.className='tag';
+      sp.appendChild(document.createTextNode(nm));
+      var x=document.createElement('b');
+      x.textContent='×';
+      x.setAttribute('data-i',String(i));
+      x.style.cssText='cursor:pointer;color:var(--pink);margin-left:4px';
+      x.onclick=function(){list.splice(i,1);render();fire();};
+      sp.appendChild(x);
+      chips.appendChild(sp);
+    });
+  }
+  host.querySelector('[data-pp=add]').onclick=function(){
+    var v=sel.value;
+    if(!v)return;
+    if(list.indexOf(v)<0)list.push(v);
+    render();fire();
+  };
+  render();
+  return {
+    get:function(){return list.slice();},
+    set:function(v){list=(v||[]).slice();render();}
+  };
+}
+
+async function api(path, method, body, raw){
+  var o={method:method,headers:{}};
+  if(raw){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body);}
+  var r=await fetch(path,o);
+  if(r.status===401){location.href='/login';throw new Error('unauthorized');}
+  if(!r.ok){
+    var msg='操作失败('+r.status+')';
+    try{var j=await r.json();if(j&&j.message)msg=j.message;else if(j&&j.error)msg=String(j.error);}catch(e){}
+    throw {status:r.status,message:msg};
+  }
+  if(r.status===204) return null;
+  return r;
+}
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll('.tab').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x===b);});
+    var t=b.getAttribute('data-tab');
+    ['trips','users','roles','teams'].forEach(function(k){
+      var sec=$('tab-'+k);if(sec)sec.classList.toggle('hidden',k!==t);
+    });
+    if(t==='users') loadUsers();
+    if(t==='roles') loadRoles();
+    if(t==='teams') loadTeams();
+  };
+});
+
+/* ---------------- 未分组行程（leaf trips，无父活动） ---------------- */
+async function loadTrips(){
+  try{
+    var r=await api('/api/trips/standalone','GET');TRIPS=await r.json();
+    var tb=$('tripTbl').querySelector('tbody');tb.innerHTML='';
+    if(!TRIPS.length){tb.innerHTML='<tr><td colspan="9" class="hint">暂无未分组行程，点「＋ 新增行程」创建，或在某大行程下「记一笔」。</td></tr>';return;}
+    TRIPS.forEach(function(t){tb.appendChild(renderLeafRow(t));});
+  }catch(e){toast((e&&e.message)||('行程加载失败'+(e&&e.status?('('+e.status+')'):'')));}
+}
+/* 复用：渲染一条 leaf 行程的可编辑行（用于未分组行程表与某大行程下的子行程表） */
+function renderLeafRow(t){
+  var tr=document.createElement('tr');tr.setAttribute('data-id',t.id);
+  tr.innerHTML='<td><input data-f="title" value="'+esc(t.title)+'"></td>'+
+    '<td><input data-f="sheet" value="'+esc(t.sheet)+'"></td>'+
+    '<td><input data-f="date" value="'+esc(t.date)+'"></td>'+
+    '<td><input data-f="year" type="number" value="'+esc(t.year)+'"></td>'+
+    '<td><select data-f="status"><option value="done"'+(t.status==='done'?' selected':'')+'>已完成</option><option value="plan"'+(t.status==='plan'?' selected':'')+'>计划中</option></select></td>'+
+    '<td><input data-f="n" type="number" value="'+esc(t.n)+'"></td>'+
+    '<td><input data-f="people" value="'+esc((t.people||[]).join('、'))+'"></td>'+
+    '<td><input data-f="cities" value="'+esc((t.cities||[]).join('、'))+'"></td>'+
+    '<td><div class="rowact"><button class="mini s" data-act="save">存</button><button class="mini d" data-act="del">删</button><button class="mini" data-act="open">明细</button></div></td>';
+  tr.querySelector('[data-act=save]').onclick=function(){saveTrip(t.id,tr);};
+  tr.querySelector('[data-act=del]').onclick=function(){delTrip(t.id,tr);};
+  tr.querySelector('[data-act=open]').onclick=function(){openItems(t.id);};
+  return tr;
+}
+function readRow(tr){var o={};tr.querySelectorAll('[data-f]').forEach(function(inp){o[inp.getAttribute('data-f')]=inp.value;});return o;}
+async function saveTrip(id,tr){var o=readRow(tr);o.people=o.people.split(/[、,，]/).map(function(x){return x.trim();}).filter(Boolean);o.cities=o.cities.split(/[、,，]/).map(function(x){return x.trim();}).filter(Boolean);
+  /* 行内 input 取到的都是字符串，后端 (Number) body.get("year") 强转会导致 400，这里统一归一成数字 */
+  o.year=Number(o.year)||0;o.n=Number(o.n)||0;
+  try{
+    await api('/api/trips/'+id,'PUT',o,true);toast('行程已保存');
+  }catch(e){toast((e&&e.message)||('保存失败'+(e&&e.status?('('+e.status+')'):'')));}}
+async function delTrip(id,tr){
+  if(!confirm('确定删除该行程及其明细？'))return;
+  try{
+    await api('/api/trips/'+id,'DELETE');toast('已删除');
+    var tbl=tr&&tr.closest?tr.closest('table'):null;
+    if(tbl&&tbl.id==='tripTbl'){loadTrips();}
+    else if(tr){var ctr=tr.closest('tr[data-pid]');if(ctr){var pid=ctr.getAttribute('data-pid');var a=ACTS.filter(function(x){return String(x.id)===String(pid);})[0];if(a){loadActChildren(a,ctr.querySelector('tbody'));}}}
+    if(curTrip===id){$('itemSec').classList.add('hidden');}
+  }catch(e){toast((e&&e.message)||('删除失败'+(e&&e.status?('('+e.status+')'):'')));}}
+async function addTrip(){var mn=meName();var o={title:'新行程',sheet:'新行程',date:'',year:new Date().getFullYear(),status:'done',n:0,people:mn?[mn]:[],cities:[]};
+  try{
+    var r=await api('/api/trips','POST',o,true);var t=await r.json();toast('已新增');loadTrips();openItems(t.id);
+  }catch(e){toast((e&&e.message)||('新增失败'+(e&&e.status?('('+e.status+')'):'')));}}
+async function openItems(id){curTrip=id;
+  try{
+  var pp=$('photoPanel');if(pp)pp.style.display='none'; /* 切换行程后旧照片面板不再适用 */
+  var r=await api('/api/trips/'+id,'GET');var t=await r.json();
+  CUR_PEOPLE=(t.people||[]).slice();
+  $('itemTrip').textContent=t.title;$('itemSec').classList.remove('hidden');
+  var tb=$('itemTbl').querySelector('tbody');tb.innerHTML='';
+  (t.items||[]).forEach(function(it){addItemRow(it);});
+  Array.prototype.forEach.call(document.querySelectorAll('tr[data-id]'),function(tr){tr.classList.toggle('selrow',tr.getAttribute('data-id')==String(id));});
+  $('itemSec').scrollIntoView({behavior:'smooth'});
+  }catch(e){toast((e&&e.message)||('明细加载失败'+(e&&e.status?('('+e.status+')'):'')));}
+}
+/* 明细日期单元格：能解析成真实日期 → 日期控件（回显补零成 yyyy-MM-dd）；
+   解析不了的存量值（如 "45439"、"12.29周五"、空）→ 仍用文本框，避免破坏数据。isNew 时默认日期控件。 */
+function itemDateCell(it,isNew){
+  var raw=(it&&it.d!=null)?String(it.d):'';
+  var pv=toPickerVal(raw);
+  if(isNew||pv) return '<input data-f="d" type="date" value="'+pesc(pv)+'">';
+  return '<input data-f="d" type="text" value="'+pesc(raw)+'">';
+}
+/* 明细付款人单元格：选项 = 当前行程人员；现有值不在人员里则追加保留（「自付」「姐夫」这类存量值不能丢） */
+function itemPayerCell(it){
+  var opts=(CUR_PEOPLE||[]).slice();
+  var cur=(it&&it.payer)?String(it.payer):'';
+  if(cur&&opts.indexOf(cur)<0)opts.push(cur);
+  var def=cur;
+  if(!def&&opts.length===1)def=opts[0];
+  return '<select data-f="payer"><option value=""></option>'+
+    opts.map(function(p){return '<option value="'+pesc(p)+'"'+(p===def?' selected':'')+'>'+pesc(p)+'</option>';}).join('')+
+    '</select>';
+}
+/* 明细分摊人单元格：选项 = 当前行程人员；默认全选（空 participants 表示按行程全体均摊）。
+   行程无同行人时渲染提示（此时后端按付款人自行承担）。 */
+function itemParticipantsCell(it){
+  var opts=(CUR_PEOPLE||[]).slice();
+  var cur=(it&&Array.isArray(it.participants))?it.participants:
+          (it&&typeof it.participants==='string'&&it.participants)?JSON.parse(it.participants):[];
+  if(!cur.length) cur=opts.slice();
+  if(!opts.length) return '<span class="muted">（行程无同行人）</span>';
+  return '<div class="ppick" data-f="participants">'+opts.map(function(p){
+    var on=cur.indexOf(p)>=0;
+    return '<label class="pchk"><input type="checkbox" value="'+pesc(p)+'"'+(on?' checked':'')+'>'+pesc(p)+'</label>';
+  }).join('')+'</div>';
+}
+function addItemRow(it,isNew){it=it||{};
+  var tr=document.createElement('tr');if(it.id)tr.setAttribute('data-id',it.id);
+  tr.innerHTML='<td>'+itemDateCell(it,!!isNew)+'</td>'+
+    '<td><select data-f="cat"><option>吃</option><option>住</option><option>行</option><option>门票</option><option>其他</option></select></td>'+
+    '<td><input data-f="name" value="'+esc(it.name)+'"></td>'+
+    '<td><input data-f="amt" type="number" step="0.01" value="'+esc(it.amt)+'"></td>'+
+    '<td>'+itemPayerCell(it)+'</td>'+
+    '<td>'+itemParticipantsCell(it)+'</td>'+
+    '<td><input data-f="note" value="'+esc(it.note)+'"></td>'+
+    '<td><div class="rowact"><button class="mini s" data-act="save">存</button><button class="mini d" data-act="del">删</button></div></td>';
+  tr.querySelector('[data-f=cat]').value=it.cat||'其他';
+  tr.querySelector('[data-act=save]').onclick=function(){saveItem(tr);};
+  tr.querySelector('[data-act=del]').onclick=function(){delItem(tr);};
+  $('itemTbl').querySelector('tbody').appendChild(tr);
+}
+function readItem(tr){var o={};tr.querySelectorAll('[data-f]').forEach(function(inp){
+  if(inp.classList.contains('ppick')){
+    var arr=[];inp.querySelectorAll('input[type=checkbox]:checked').forEach(function(c){arr.push(c.value);});o['participants']=arr;
+  } else { o[inp.getAttribute('data-f')]=inp.value; }
+});return o;}
+async function saveItem(tr){var o=readItem(tr),id=tr.getAttribute('data-id');
+  o.d=toDispVal(o.d);
+  try{
+    if(id){await api('/api/items/'+id,'PUT',o,true);}else{await api('/api/trips/'+curTrip+'/items','POST',o,true);}
+    toast('明细已保存');openItems(curTrip);
+  }catch(e){toast((e&&e.message)||('保存失败'+(e&&e.status?('('+e.status+')'):'')));}}
+async function delItem(tr){var id=tr.getAttribute('data-id');if(!id){tr.remove();return;}
+  if(!confirm('删除该笔明细？'))return;
+  try{
+    await api('/api/items/'+id,'DELETE');toast('已删除');openItems(curTrip);
+  }catch(e){toast((e&&e.message)||('删除失败'+(e&&e.status?('('+e.status+')'):'')));}}
+$('addItem').onclick=function(){addItemRow({},true);};
+async function showAA(){
+  if(!curTrip){toast('请先打开某个行程的明细');return;}
+  try{
+    var r=await api('/api/trips/'+curTrip+'/settle','GET');
+    var d=await r.json();
+    if(!r.ok){toast('结算失败'+(d.error?(': '+d.error):''));return;}
+    function money(x){return Number(x==null?0:x).toFixed(2);}
+    var h='<p class="muted">合计支出 ¥'+money(d.total)+'；以下为「谁该给谁多少钱」的清账清单。</p>';
+    h+='<table class="grid" style="max-width:520px"><thead><tr><th>人员</th><th>已付</th><th>应摊</th><th>净额</th></tr></thead><tbody>';
+    (d.people||[]).forEach(function(p){
+      var b=Number(p.balance), cls=b>0?'pos':(b<0?'neg':''), sign=b>0?'+':(b<0?'−':'±');
+      h+='<tr><td>'+pesc(p.name)+'</td><td>¥'+money(p.paid)+'</td><td>¥'+money(p.share)+'</td><td class="'+cls+'">'+sign+'¥'+money(Math.abs(b))+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    var trs=(d.transfers||[]);
+    if(trs.length){h+='<h4>转账清单</h4><ul class="trans">';trs.forEach(function(t){h+='<li><b>'+pesc(t.from)+'</b> 给 <b>'+pesc(t.to)+'</b> ¥'+money(t.amount)+'</li>';});h+='</ul>';}
+    else { h+='<p class="muted">已平账，无需转账。</p>'; }
+    $('aaBody').innerHTML=h;
+    $('aaPanel').style.display='block';
+    $('aaPanel').scrollIntoView({behavior:'smooth'});
+  }catch(e){toast((e&&e.message)||'结算失败');}
+}
+$('aaBtn').onclick=showAA;
+$('exp').onclick=function(){window.location='/api/export/xlsx';};
+$('imp').onchange=async function(e){var f=e.target.files[0];if(!f)return;
+  if(!confirm('导入将清空现有数据并整体重建，确定？建议先导出备份。')){e.target.value='';return;}
+  var fd=new FormData();fd.append('file',f);toast('导入中…');
+  fetch('/api/import/xlsx',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(j){
+    toast(j.ok?('导入成功：'+j.trips+' 行程 / '+j.items+' 明细'):('导入失败：'+(j.error||'')));loadTrips();e.target.value='';
+  }).catch(function(err){toast('导入出错：'+err);e.target.value='';});};
+$('addTrip').onclick=addTrip;
+
+/* ---------------- 用户 ---------------- */
+async function loadUsers(){
+  try{
+    var r=await api('/api/teams','GET');var ts=await r.json();
+    TEAMS={};ts.forEach(function(t){TEAMS[t.id]=t;});
+  }catch(e){}
+  var r=await api('/api/users?size=200','GET');var j=await r.json();
+  var tb=$('userTbl').querySelector('tbody');tb.innerHTML='';
+  (j.content||[]).forEach(function(u){
+    var tr=document.createElement('tr');tr.setAttribute('data-id',u.id);
+    var roleTags=(u.roles||[]).map(function(c){return '<span class="tag">'+esc(c)+'</span>';}).join('');
+    var teamTags=(u.teams||[]).map(function(id){return '<span class="tag">'+esc(TEAMS[id]?TEAMS[id].name:id)+'</span>';}).join('');
+    tr.innerHTML='<td>'+u.id+'</td>'+
+      '<td>'+esc(u.username)+'</td>'+
+      '<td>'+esc(u.displayName)+'</td>'+
+      '<td>'+(u.enabled?'<span class="tag">启用</span>':'<span class="tag seed">禁用</span>')+(u.mustChangePwd?' <span class="tag seed">待改密</span>':'')+'</td>'+
+      '<td>'+roleTags+'</td>'+
+      '<td>'+teamTags+'</td>'+
+      '<td>'+fmtTime(u.createdAt)+'</td>'+
+      '<td><div class="rowact"><button class="mini t" data-act="roles">角色</button><button class="mini t" data-act="teams">团队</button><button class="mini s" data-act="edit">改</button><button class="mini d" data-act="del">删</button></div></td>';
+    tr.querySelector('[data-act=roles]').onclick=function(){openUserRoles(u);};
+    tr.querySelector('[data-act=teams]').onclick=function(){openUserTeams(u);};
+    tr.querySelector('[data-act=edit]').onclick=function(){openUserEdit(u);};
+    tr.querySelector('[data-act=del]').onclick=function(){delUser(u);};
+    tb.appendChild(tr);
+  });
+}
+$('addUser').onclick=function(){openUserEdit(null);};
+$('batchUsers').onclick=async function(){
+  if(!confirm('将扫描全部出行人员，按 名字@travel.cn 批量建号并归入「老废物乐园」（已存在跳过）。确定？'))return;
+  try{
+    var r=await api('/api/users/batch-create-from-trips','POST');var j=await r.json();
+    var msg='批量建号完成：新建 '+((j.created)||[]).length+' 人，跳过 '+((j.skipped)||[]).length+' 人，归队「'+(j.team||'')+'」';
+    if((j.created||[]).length) msg+='\n新建：'+j.created.join('、');
+    if((j.skipped||[]).length) msg+='\n跳过：'+j.skipped.join('、');
+    toast(msg);loadUsers();
+  }catch(e){toast((e&&e.message)||'批量建号失败');}
+};
+function openUserEdit(u){
+  var isNew=!u;
+  var html=''+
+    '<div class="fld"><label>账号（名字@travel.cn）</label><input id="fu_user" value="'+esc(isNew?'':u.username)+'"'+(isNew?'':' readonly')+'></div>'+
+    '<div class="fld"><label>显示名</label><input id="fu_name" value="'+esc(isNew?'':u.displayName)+'"></div>'+
+    '<div class="fld"><label>初始密码（留空用默认 user123）</label><input id="fu_pass" type="password" placeholder="user123"></div>'+
+    '<div class="fld"><label><input type="checkbox" id="fu_enabled" '+(isNew?'checked':(u.enabled?'checked':''))+'> 启用</label></div>';
+  openModal(isNew?'新增用户':'编辑用户 · '+esc(u.username),html);
+  $('modalOk').onclick=async function(){
+    try{
+      var body={displayName:$('fu_name').value,enabled:$('fu_enabled').checked};
+      var pw=$('fu_pass').value;if(pw)body.password=pw;
+      if(isNew){body.username=$('fu_user').value;await api('/api/users','POST',body,true);}
+      else{await api('/api/users/'+u.id,'PUT',body,true);}
+      toast('已保存');closeModal();loadUsers();
+    }catch(e){toast((e&&e.message)||'保存失败');}
+  };
+}
+async function openUserRoles(u){
+  var r=await api('/api/roles','GET');ROLES=(await r.json())||[];
+  var cur=new Set(u.roles||[]);
+  var html='<div class="checks">'+ROLES.map(function(role){
+    return '<label><input type="checkbox" value="'+role.id+'" '+(cur.has(role.code)?'checked':'')+'> '+esc(role.name)+' ('+esc(role.code)+')</label>';
+  }).join('')+'</div>';
+  openModal('分配角色 · '+esc(u.displayName),html);
+  $('modalOk').onclick=async function(){
+    try{
+      var ids=Array.prototype.map.call($('modalBody').querySelectorAll('input[type=checkbox]'),function(c){return c.checked?Number(c.value):null;}).filter(Boolean);
+      await api('/api/users/'+u.id+'/roles','POST',{roleIds:ids},true);
+      toast('角色已更新');closeModal();loadUsers();
+    }catch(e){toast((e&&e.message)||'更新失败');}
+  };
+}
+async function openUserTeams(u){
+  var r=await api('/api/teams','GET');var teams=await r.json();
+  var cur=new Set(u.teams||[]);
+  var html='<div class="checks">'+teams.map(function(t){
+    return '<label><input type="checkbox" value="'+t.id+'" '+(cur.has(t.id)?'checked':'')+'> '+esc(t.name)+(t.isDefault?'（种子）':'')+'</label>';
+  }).join('')+'</div>';
+  openModal('加入团队 · '+esc(u.displayName),html);
+  $('modalOk').onclick=async function(){
+    try{
+      var ids=Array.prototype.map.call($('modalBody').querySelectorAll('input[type=checkbox]'),function(c){return c.checked?Number(c.value):null;}).filter(Boolean);
+      await api('/api/users/'+u.id+'/teams','POST',{teamIds:ids},true);
+      toast('团队已更新');closeModal();loadUsers();
+    }catch(e){toast((e&&e.message)||'更新失败');}
+  };
+}
+async function delUser(u){
+  if(!confirm('确定删除用户 '+u.username+'？'))return;
+  try{await api('/api/users/'+u.id,'DELETE');toast('已删除');loadUsers();}catch(e){toast((e&&e.message)||'删除失败');}
+}
+
+/* ---------------- 角色 ---------------- */
+async function loadRoles(){
+  try{
+  var r=await api('/api/roles','GET');ROLES=await r.json();
+  var tb=$('roleTbl').querySelector('tbody');tb.innerHTML='';
+  ROLES.forEach(function(role){
+    var tr=document.createElement('tr');tr.setAttribute('data-id',role.id);
+    var permTags=(role.permissions||[]).map(function(p){return '<span class="tag">'+esc(p)+'</span>';}).join(' ');
+    tr.innerHTML='<td>'+role.id+'</td><td>'+esc(role.name)+'</td><td>'+esc(role.code)+'</td><td>'+permTags+'</td>'+
+      '<td><div class="rowact"><button class="mini s" data-act="edit">改</button><button class="mini d" data-act="del">删</button></div></td>';
+    tr.querySelector('[data-act=edit]').onclick=function(){openRoleEdit(role);};
+    tr.querySelector('[data-act=del]').onclick=function(){delRole(role);};
+    tb.appendChild(tr);
+  });
+  }catch(e){toast((e&&e.message)||('角色加载失败'+(e&&e.status?('('+e.status+')'):'')));}
+}
+$('addRole').onclick=function(){openRoleEdit(null);};
+function openRoleEdit(role){
+  var isNew=!role;
+  var cur=new Set(isNew?[]:(role.permissions||[]));
+  var html=''+
+    '<div class="fld"><label>编码（如 EDITOR，唯一）</label><input id="fr_code" value="'+esc(isNew?'':role.code)+'"'+(isNew?'':' readonly')+'></div>'+
+    '<div class="fld"><label>显示名</label><input id="fr_name" value="'+esc(isNew?'':role.name)+'"></div>'+
+    '<div class="fld"><label>权限</label><div class="checks">'+PERMS.map(function(p){
+      return '<label><input type="checkbox" value="'+p[0]+'" '+(cur.has(p[0])?'checked':'')+'> '+p[1]+' ('+p[0]+')</label>';
+    }).join('')+'</div></div>';
+  openModal(isNew?'新增角色':'编辑角色 · '+esc(role.code),html);
+  $('modalOk').onclick=async function(){
+    try{
+      var perms=Array.prototype.map.call($('modalBody').querySelectorAll('input[type=checkbox]'),function(c){return c.checked?c.value:null;}).filter(Boolean);
+      var body={name:$('fr_name').value,permissions:perms};
+      if(isNew){body.code=$('fr_code').value;await api('/api/roles','POST',body,true);}
+      else{await api('/api/roles/'+role.id,'PUT',body,true);}
+      toast('已保存');closeModal();loadRoles();
+    }catch(e){toast((e&&e.message)||'保存失败');}
+  };
+}
+async function delRole(role){
+  if(!confirm('确定删除角色 '+role.code+'？（被引用的角色无法删除）'))return;
+  try{await api('/api/roles/'+role.id,'DELETE');toast('已删除');loadRoles();}catch(e){toast((e&&e.message)||'删除失败');}
+}
+
+/* ---------------- 团队 ---------------- */
+async function loadTeams(){
+  try{
+  var r=await api('/api/teams','GET');var teams=await r.json();
+  TEAMS={};teams.forEach(function(t){TEAMS[t.id]=t;});
+  var tb=$('teamTbl').querySelector('tbody');tb.innerHTML='';
+  teams.forEach(function(t){
+    var tr=document.createElement('tr');tr.setAttribute('data-id',t.id);
+    tr.innerHTML='<td>'+t.id+'</td><td>'+esc(t.name)+(t.isDefault?' <span class="tag seed">种子</span>':'')+'</td>'+
+      '<td>'+esc(t.description)+'</td><td>'+(t.memberCount||0)+'</td><td>'+fmtTime(t.createdAt)+'</td>'+
+      '<td>'+(t.isDefault?'<span class="tag seed">是</span>':'')+'</td>'+
+      '<td><div class="rowact"><button class="mini t" data-act="members">成员</button><button class="mini s" data-act="edit">改</button><button class="mini d" data-act="del">删</button></div></td>';
+    tr.querySelector('[data-act=members]').onclick=function(){openTeamMembers(t);};
+    tr.querySelector('[data-act=edit]').onclick=function(){openTeamEdit(t);};
+    tr.querySelector('[data-act=del]').onclick=function(){delTeam(t);};
+    tb.appendChild(tr);
+  });
+  }catch(e){toast((e&&e.message)||('团队加载失败'+(e&&e.status?('('+e.status+')'):'')));}
+}
+$('addTeam').onclick=function(){openTeamEdit(null);};
+function openTeamEdit(t){
+  var isNew=!t;
+  var html=''+
+    '<div class="fld"><label>团队名</label><input id="ft_name" value="'+esc(isNew?'':t.name)+'"></div>'+
+    '<div class="fld"><label>描述</label><input id="ft_desc" value="'+esc(isNew?'':t.description)+'"></div>'+
+    '<div class="fld"><label><input type="checkbox" id="ft_def" '+(isNew?'':(t.isDefault?'checked':''))+'> 默认团队</label></div>';
+  openModal(isNew?'新增团队':'编辑团队 · '+esc(t.name),html);
+  $('modalOk').onclick=async function(){
+    try{
+      var body={name:$('ft_name').value,description:$('ft_desc').value,isDefault:$('ft_def').checked};
+      if(isNew){await api('/api/teams','POST',body,true);}else{await api('/api/teams/'+t.id,'PUT',body,true);}
+      toast('已保存');closeModal();loadTeams();
+    }catch(e){toast((e&&e.message)||'保存失败');}
+  };
+}
+async function delTeam(t){
+  if(!confirm('确定删除团队 '+t.name+'？（将解除成员关联，行程落回最新团队）'))return;
+  try{await api('/api/teams/'+t.id,'DELETE');toast('已删除');loadTeams();}catch(e){toast((e&&e.message)||'删除失败');}
+}
+async function openTeamMembers(t){
+  $('teamDrawerTitle').textContent='成员管理 · '+t.name;
+  var r=await api('/api/teams/'+t.id+'/members','GET');var members=await r.json();
+  var ru=await api('/api/users?size=200','GET');var all=await ru.json();
+  var memberIds=new Set((members||[]).map(function(m){return m.id;}));
+  var others=(all.content||[]).filter(function(u){return !memberIds.has(u.id);});
+  var html='<div id="dmembers">'+((members||[]).map(function(m){
+    return '<div class="member"><span class="nm">'+esc(m.displayName||m.username)+' <small style="color:var(--tx3)">'+esc(m.username)+'</small></span>'+
+      '<button class="mini d" data-uid="'+m.id+'">移除</button></div>';
+  }).join('')||'<div class="hint">暂无成员</div>')+'</div>';
+  if(others.length){
+    html+='<div class="fld" style="margin-top:14px"><label>添加成员</label><select id="addMemberSel">'+others.map(function(u){return '<option value="'+u.id+'">'+esc(u.displayName||u.username)+' ('+esc(u.username)+')</option>';}).join('')+'</select></div>'+
+      '<button class="btn p" id="addMemberBtn" style="width:100%">添加</button>';
+  }
+  $('teamDrawerBody').innerHTML=html;
+  $('teamDrawer').classList.add('open');
+  Array.prototype.forEach.call($('teamDrawerBody').querySelectorAll('button[data-uid]'),function(b){
+    b.onclick=async function(){
+      try{
+        var uid=Number(b.getAttribute('data-uid'));
+        var ids=(await (await api('/api/users/'+uid,'GET')).json()).teams.filter(function(id){return id!==t.id;});
+        await api('/api/users/'+uid+'/teams','POST',{teamIds:ids},true);
+        toast('已移除');openTeamMembers(t);
+      }catch(e){toast((e&&e.message)||'操作失败');}
+    };
+  });
+  var ab=$('addMemberBtn');
+  if(ab)ab.onclick=async function(){
+    try{
+      var uid=Number($('addMemberSel').value);
+      var ids=(await (await api('/api/users/'+uid,'GET')).json()).teams.concat([t.id]);
+      await api('/api/users/'+uid+'/teams','POST',{teamIds:ids},true);
+      toast('已添加');openTeamMembers(t);
+    }catch(e){toast((e&&e.message)||'操作失败');}
+  };
+}
+$('teamDrawerX').onclick=function(){$('teamDrawer').classList.remove('open');};
+
+/* ---------------- 弹层通用 ---------------- */
+function openModal(title,html){$('modalTitle').textContent=title;$('modalBody').innerHTML=html;$('modal').style.display='flex';}
+function closeModal(){$('modal').style.display='none';}
+$('modalX').onclick=closeModal;
+$('modalCancel').onclick=closeModal;
+$('modal').onclick=function(e){if(e.target===$('modal'))closeModal();};
+
+/* ---------------- 活动（V3） ---------------- */
+var ACTS=[], USERS_CACHE=null, ACT_ROLE_TXT={OWNER:'创建人',CO_OWNER:'辅助 Owner',EDITOR:'编辑者',MEMBER:'参与者'};
+async function loadActivities(){
+  try{
+    var rt=await api('/api/teams','GET');var ts=await rt.json();
+    TEAMS={};ts.forEach(function(t){TEAMS[t.id]=t;});
+  }catch(e){}
+  try{
+    var r=await api('/api/trips','GET');ACTS=await r.json();
+  }catch(e){ACTS=[];}
+  var tb=$('actTbl').querySelector('tbody');tb.innerHTML='';
+  if(!ACTS.length){tb.innerHTML='<tr><td colspan="8" class="hint">暂无大行程，点「＋ 新建大行程」创建第一个</td></tr>';return;}
+  ACTS.forEach(function(a){
+    var tr=document.createElement('tr');tr.setAttribute('data-id',a.id);
+    var tname=(TEAMS[a.teamId]&&TEAMS[a.teamId].name)||('团队'+a.teamId);
+    var nm=esc(a.name||a.title||'未命名');
+    var amt=a.totalAmount?('¥'+Number(a.totalAmount).toLocaleString('zh-CN')):'—';
+    var roleBadge=a.myRole?('<b>'+ACT_ROLE_TXT[a.myRole]+'</b> <small style="color:var(--tx3)">'+a.myRole+'</small>'):'—';
+    var state=a.closed?'<span style="color:var(--tx3)">已结束</span>':'<span style="color:var(--cyan)">进行中</span>';
+    tr.innerHTML='<td><button class="mini t" data-act="exp">▸</button></td>'+
+      '<td>'+nm+'</td>'+
+      '<td>'+esc(tname)+'</td>'+
+      '<td>'+(a.childCount||0)+'</td>'+
+      '<td>'+amt+'</td>'+
+      '<td>'+roleBadge+'</td>'+
+      '<td>'+state+'</td>'+
+      '<td><div class="rowact">'+(a.canEdit?'<button class="mini s" data-act="add">记一笔</button>':'')+
+      '<button class="mini" data-act="mem">成员</button>'+
+      '<button class="mini" data-act="toggle">'+(a.closed?'重开':'结束')+'</button>'+
+      '<button class="mini d" data-act="del">删</button></div></td>';
+    tr.querySelector('[data-act=exp]').onclick=function(){toggleActChildren(a,tr);};
+    var ab=tr.querySelector('[data-act=add]');
+    if(ab)ab.onclick=function(){openQuickItem(a);};
+    tr.querySelector('[data-act=mem]').onclick=function(){openActMembers(a);};
+    tr.querySelector('[data-act=toggle]').onclick=function(){toggleAct(a);};
+    tr.querySelector('[data-act=del]').onclick=function(){delAct(a);};
+    tb.appendChild(tr);
+    /* 子行程容器行：懒加载 GET /api/trips/{id}/trips */
+    var cr=document.createElement('tr');cr.setAttribute('data-pid',a.id);cr.className='hidden';
+    cr.innerHTML='<td colspan="8"><div class="wrap" style="padding:4px 0"><table class="grid" data-children="'+a.id+'">'+
+      '<thead><tr><th style="width:18%">标题</th><th style="width:10%">分表名</th><th style="width:12%">日期</th><th style="width:6%">年份</th><th style="width:8%">状态</th><th style="width:5%">人数</th><th style="width:17%">人员(、分隔)</th><th style="width:9%">城市(、分隔)</th><th style="width:15%">操作</th></tr></thead>'+
+      '<tbody><tr><td colspan="9" class="hint">点击 ▸ 展开加载该大行程下的行程</td></tr></tbody></table></div></td>';
+    tb.appendChild(cr);
+  });
+}
+/* 懒加载并渲染某大行程下的子行程（leaf trips） */
+async function loadActChildren(a,tb){
+  try{
+    var r=await api('/api/trips/'+a.id+'/trips','GET');var kids=await r.json();
+    tb.innerHTML='';tb.setAttribute('data-loaded','1');
+    if(!kids.length){tb.innerHTML='<tr><td colspan="9" class="hint">该大行程下暂无行程</td></tr>';return;}
+    (kids||[]).forEach(function(t){tb.appendChild(renderLeafRow(t));});
+  }catch(e){toast('子行程加载失败');}
+}
+/* 展开 / 收起某大行程下的子行程 */
+async function toggleActChildren(a,parentTr){
+  var cr=parentTr.nextElementSibling;
+  if(!cr||cr.getAttribute('data-pid')!==String(a.id))return;
+  var exp=parentTr.querySelector('[data-act=exp]');
+  if(cr.classList.contains('hidden')){
+    cr.classList.remove('hidden');
+    if(exp)exp.textContent='▾';
+    var tb=cr.querySelector('tbody');
+    if(tb.getAttribute('data-loaded')!=='1'){await loadActChildren(a,tb);}
+  }else{
+    cr.classList.add('hidden');
+    if(exp)exp.textContent='▸';
+  }
+}
+/* ---------------- V3 新建活动向导（3 步） ---------------- */
+var WIZ={};
+$('addAct').onclick=async function(){
+  try{
+    var r=await api('/api/teams','GET');var ts=await r.json();
+    TEAMS={};ts.forEach(function(t){TEAMS[t.id]=t;});
+  }catch(e){}
+  WIZ={step:1,name:'',teamId:Number(Object.keys(TEAMS)[0]||0),desc:'',members:[],allNames:[],
+       trip:{title:'',date:'',n:1,cities:'',status:'done',people:null}};
+  renderWizard();
+};
+async function renderWizard(){
+  var ok=$('modalOk'),body=$('modalBody');
+  /* 本函数是唯一不走 openModal() 而直写 #modalBody 的弹层，必须自己把弹层显示出来 */
+  $('modal').style.display='flex';
+  $('modalCancel').textContent = WIZ.step>1 ? '上一步' : '取消';
+  $('modalCancel').onclick = WIZ.step>1 ? function(){syncWizardTrip();WIZ.step--;renderWizard();} : closeModal;
+  if(WIZ.step===1){
+    $('modalTitle').textContent='新建活动 · 第 1/3 步 基本信息';
+    body.innerHTML='<div class="fld"><label>活动名</label><input id="wz_name" value="'+esc(WIZ.name)+'" placeholder="例如：2026 国庆 · 川西环线"></div>'+
+      '<div class="fld"><label>归属团队</label><select id="wz_team">'+Object.keys(TEAMS).map(function(k){
+        return '<option value="'+k+'"'+(String(WIZ.teamId)===k?' selected':'')+'>'+esc(TEAMS[k].name)+'</option>';}).join('')+'</select></div>'+
+      '<div class="fld"><label>说明（可选）</label><input id="wz_desc" value="'+esc(WIZ.desc)+'" placeholder="这次出行是干嘛的"></div>';
+    ok.textContent='下一步 →';
+    ok.onclick=async function(){
+      WIZ.name=$('wz_name').value.trim();
+      if(!WIZ.name){toast('请填活动名');return;}
+      WIZ.teamId=Number($('wz_team').value);WIZ.desc=$('wz_desc').value;
+      await loadWizMembers();WIZ.step=2;renderWizard();
+    };
+  } else if(WIZ.step===2){
+    $('modalTitle').textContent='新建活动 · 第 2/3 步 参与者与角色';
+    if(!WIZ.members.length){
+      body.innerHTML='<div class="hint">该团队暂无其他成员，你将成为唯一的创建人。可直接下一步。</div>';
+    } else {
+      body.innerHTML='<div class="hint" style="margin-bottom:8px">勾选参与者并设定活动内角色；你自动成为<b>创建人</b>，不在此列表。</div>'+
+        '<div class="checks">'+WIZ.members.map(function(m,i){
+          return '<label><input type="checkbox" data-i="'+i+'"'+(m.checked?' checked':'')+'> '+
+            esc(m.name)+' <small style="color:var(--tx3)">'+esc(m.username)+'</small>'+
+            ' <select data-sel="'+i+'" style="height:26px;width:110px;margin-left:6px">'+
+            '<option value="MEMBER"'+(m.role==='MEMBER'?' selected':'')+'>参与者</option>'+
+            '<option value="EDITOR"'+(m.role==='EDITOR'?' selected':'')+'>编辑者</option>'+
+            '</select></label>';
+        }).join('')+'</div>';
+      body.querySelectorAll('input[data-i]').forEach(function(cb){
+        cb.onchange=function(){WIZ.members[Number(cb.getAttribute('data-i'))].checked=cb.checked;};
+      });
+      body.querySelectorAll('select[data-sel]').forEach(function(s){
+        s.onchange=function(){WIZ.members[Number(s.getAttribute('data-sel'))].role=s.value;};
+      });
+    }
+    ok.textContent='下一步 →';
+    ok.onclick=function(){WIZ.step=3;renderWizard();};
+  } else {
+    $('modalTitle').textContent='新建活动 · 第 3/3 步 记第一笔行程（可留空）';
+    if(WIZ.trip.people===null){
+      var mn=meName();
+      WIZ.trip.people=mn?[mn]:[];
+    }
+    var wizOpts=(WIZ.allNames||[]).slice();
+    var mn2=meName();
+    if(mn2&&wizOpts.indexOf(mn2)<0)wizOpts.unshift(mn2);
+    body.innerHTML='<div class="hint" style="margin-bottom:8px">留空则只建活动，之后可在「记一笔」里补录。</div>'+
+      '<div class="fld"><label>行程标题</label><input id="wz_t_title" placeholder="例如：成都三日" value="'+esc(WIZ.trip.title)+'"></div>'+
+      '<div class="fld"><label>日期</label><input id="wz_t_date" type="date" value="'+pesc(WIZ.trip.date)+'"></div>'+
+      '<div class="fld"><label>城市（、分隔）</label><input id="wz_t_cities" placeholder="成都、重庆" value="'+esc(WIZ.trip.cities)+'"></div>'+
+      '<div class="fld"><label>人数</label><input id="wz_t_n" type="number" min="1" value="'+esc(WIZ.trip.n)+'"></div>'+
+      '<div class="fld"><label>状态</label><select id="wz_t_status"><option value="done"'+(WIZ.trip.status==='done'?' selected':'')+'>已完成</option><option value="plan"'+(WIZ.trip.status==='plan'?' selected':'')+'>计划中</option></select></div>'+
+      '<div class="fld"><label>人员（默认含创建者，可增删）</label><div id="wz_t_people"></div></div>';
+    WIZ.peoplePicker=buildPeoplePicker($('wz_t_people'),wizOpts,WIZ.trip.people,function(l){WIZ.trip.people=l;});
+    ok.textContent='完成创建';
+    ok.onclick=async function(){
+      try{
+        WIZ.trip={title:$('wz_t_title').value.trim(),date:$('wz_t_date').value.trim(),
+          cities:$('wz_t_cities').value.trim(),n:Number($('wz_t_n').value)||1,status:$('wz_t_status').value,
+          people:WIZ.peoplePicker?WIZ.peoplePicker.get():[]};
+        var body2={name:WIZ.name,teamId:WIZ.teamId,description:WIZ.desc};
+        var picked=WIZ.members.filter(function(m){return m.checked;});
+        if(picked.length)body2.members=picked.map(function(m){return {userId:m.id,role:m.role};});
+        var created=await (await api('/api/trips','POST',body2,true)).json();
+        USERS_CACHE=null;
+        if(WIZ.trip.title){
+          /* 日期控件是 yyyy-MM-dd，转回应用展示格式 yyyy.M.d 再入库 */
+          var dispDate=toDispVal(WIZ.trip.date);
+          var year=(dispDate.match(/(\d{4})/)||[null,String(new Date().getFullYear())])[1];
+          await api('/api/trips','POST',{
+            title:WIZ.trip.title,sheet:WIZ.trip.title,date:dispDate,year:Number(year),
+            status:WIZ.trip.status,n:WIZ.trip.n,people:WIZ.trip.people||[],
+            cities:WIZ.trip.cities.split(/[、,，]/).map(function(x){return x.trim();}).filter(Boolean),
+            parentId:created.id},true);
+          toast('活动已创建，并记录了第一笔行程');
+        } else {
+          toast('活动已创建，你已成为创建人');
+        }
+        closeModal();resetModalFooter();loadActivities();
+      }catch(e){toast((e&&e.message)||'创建失败');}
+    };
+  }
+}
+function resetModalFooter(){$('modalCancel').textContent='取消';$('modalCancel').onclick=closeModal;$('modalOk').textContent='保存';}
+/* 从第 3 步返回上一步时，把已填内容回填 WIZ.trip，避免来回切换后输入丢失（与人员 chips 的保持行为一致） */
+function syncWizardTrip(){
+  if(WIZ.step!==3)return;
+  var t=$('wz_t_title'),d=$('wz_t_date'),c=$('wz_t_cities'),n=$('wz_t_n'),s=$('wz_t_status');
+  if(!t||!d)return;
+  WIZ.trip.title=t.value.trim();WIZ.trip.date=d.value.trim();WIZ.trip.cities=c.value.trim();
+  WIZ.trip.n=Number(n.value)||1;WIZ.trip.status=s.value;
+}
+async function loadWizMembers(){
+  WIZ.members=[];WIZ.allNames=[];
+  try{
+    var r=await api('/api/teams/'+WIZ.teamId+'/members','GET');
+    var ms=(await r.json())||[];
+    WIZ.members=ms.filter(function(m){return m.username!==(ME&&ME.username);})
+      .map(function(m){return {id:m.id,username:m.username,name:m.displayName||m.username,role:'MEMBER',checked:false};});
+    /* 第 3 步「人员」下拉需要含创建者本人，故另存一份完整中文名清单 */
+    WIZ.allNames=ms.map(function(m){return m.displayName||m.username;});
+  }catch(e){WIZ.members=[];WIZ.allNames=[];}
+}
+async function toggleAct(a){
+  try{
+    await api('/api/trips/'+a.id,'PUT',{closed:!a.closed},true);
+    toast(a.closed?'已重开':'已结束');loadActivities();
+  }catch(e){toast((e&&e.message)||'操作失败');}
+}
+async function delAct(a){
+  if(!confirm('删除活动「'+a.name+'」？其下行程不会删除，仅解除活动归属（变为未分组行程）。'))return;
+  try{await api('/api/trips/'+a.id,'DELETE');toast('已删除');loadActivities();}catch(e){toast((e&&e.message)||'删除失败');}
+}
+async function allUsers(){
+  if(USERS_CACHE)return USERS_CACHE;
+  try{var r=await api('/api/users?size=200','GET');var j=await r.json();USERS_CACHE=(j.content)||[];}catch(e){USERS_CACHE=[];}
+  return USERS_CACHE;
+}
+async function openActMembers(a){
+  $('teamDrawerTitle').textContent='成员与角色 · '+a.name;
+  var r=await api('/api/trips/'+a.id+'/members','GET');var mems=await r.json();
+  var all=await allUsers();
+  var roleOpts=function(cur,disabled){
+    return ['OWNER','CO_OWNER','EDITOR','MEMBER'].map(function(rr){
+      if(rr==='OWNER'&&cur!=='OWNER')return '';
+      return '<option value="'+rr+'"'+(rr===cur?' selected':'')+(disabled?' disabled':'')+'>'+ACT_ROLE_TXT[rr]+'</option>';
+    }).join('');
+  };
+  var html='<div class="hint" style="margin-bottom:8px">当前你在该大行程为：<b>'+(ACT_ROLE_TXT[a.myRole]||'系统管理员')+'</b>'+(a.canManage?'（可管理成员）':'（不可管理成员）')+'</div>';
+  html+=(mems||[]).map(function(m){
+    var dis=!a.canManage||m.role==='OWNER';
+    return '<div class="member"><span class="nm">'+esc(m.displayName||m.username)+'</span>'+
+      '<select data-uid="'+m.userId+'" data-old="'+m.role+'" '+(dis?'disabled':'')+'>'+roleOpts(m.role,dis)+'</select>'+
+      (a.canManage&&m.role!=='OWNER'?'<button class="mini d" data-del="'+m.userId+'">移除</button>':'')+'</div>';
+  }).join('')||'<div class="hint">暂无成员</div>';
+  var ids=new Set((mems||[]).map(function(m){return m.userId;}));
+  var others=all.filter(function(u){return !ids.has(u.id);});
+  if(a.canManage&&others.length){
+    html+='<div class="fld" style="margin-top:14px"><label>添加成员</label><select id="amSel">'+others.map(function(u){return '<option value="'+u.id+'">'+esc(u.displayName||u.username)+'</option>';}).join('')+'</select></div>'+
+      '<div class="fld"><label>角色</label><select id="amRole"><option value="MEMBER">参与者</option><option value="EDITOR">编辑者</option>'+(a.myRole==='OWNER'||!a.myRole?'<option value="CO_OWNER">辅助 Owner</option>':'')+'</select></div>'+
+      '<button class="btn p" id="amAdd" style="width:100%">添加</button>';
+  }
+  $('teamDrawerBody').innerHTML=html;
+  $('teamDrawer').classList.add('open');
+  Array.prototype.forEach.call($('teamDrawerBody').querySelectorAll('select[data-uid]'),function(s){
+    s.onchange=async function(){
+      try{
+        await api('/api/trips/'+a.id+'/members/'+s.getAttribute('data-uid'),'PUT',{role:s.value},true);
+        toast('角色已更新');loadActivities();openActMembers(a);
+      }catch(e){toast((e&&e.message)||'更新失败');s.value=s.getAttribute('data-old');}
+    };
+  });
+  Array.prototype.forEach.call($('teamDrawerBody').querySelectorAll('button[data-del]'),function(b){
+    b.onclick=async function(){
+      if(!confirm('移除该成员？'))return;
+      try{await api('/api/trips/'+a.id+'/members/'+b.getAttribute('data-del'),'DELETE');toast('已移除');openActMembers(a);loadActivities();}
+      catch(e){toast((e&&e.message)||'移除失败');}
+    };
+  });
+  var ab=$('amAdd');
+  if(ab)ab.onclick=async function(){
+    try{
+      await api('/api/trips/'+a.id+'/members','POST',{userId:Number($('amSel').value),role:$('amRole').value},true);
+      toast('已添加');USERS_CACHE=null;loadActivities();openActMembers(a);
+    }catch(e){toast((e&&e.message)||'添加失败');}
+  };
+}
+/* V3：从大行程列表「记一笔」快速录一笔子行程到该大行程 */
+async function openQuickItem(a){
+  var body=$('modalBody'),ok=$('modalOk');
+  $('modalTitle').textContent='记一笔 · '+a.name;
+  /* 人员候选 = 该大行程成员的中文显示名；默认选中当前登录用户，若不在成员里则取第一个成员 */
+  var qiNames=[];
+  try{
+    var rm=await api('/api/trips/'+a.id+'/members','GET');
+    var mems=(await rm.json())||[];
+    qiNames=mems.map(function(m){return m.displayName||m.username;});
+  }catch(e){qiNames=[];}
+  var mn=meName(), qiSel=[];
+  if(qiNames.length){qiSel=(mn&&qiNames.indexOf(mn)>=0)?[mn]:[qiNames[0]];}
+  else if(mn){qiNames=[mn];qiSel=[mn];}
+  body.innerHTML='<div class="hint" style="margin-bottom:8px">这笔行程将记入大行程「'+esc(a.name)+'」，可在大屏按大行程切换查看。</div>'+
+    '<div class="fld"><label>行程标题</label><input id="qi_title" placeholder="例如：成都三日"></div>'+
+    '<div class="fld"><label>日期</label><input id="qi_date" type="date"></div>'+
+    '<div class="fld"><label>城市（、分隔）</label><input id="qi_cities" placeholder="成都、重庆"></div>'+
+    '<div class="fld"><label>人数</label><input id="qi_n" type="number" min="1" value="1"></div>'+
+    '<div class="fld"><label>状态</label><select id="qi_status"><option value="done">已完成</option><option value="plan">计划中</option></select></div>'+
+    '<div class="fld"><label>人员（默认含你，可增删）</label><div id="qi_people"></div></div>';
+  var qiPicker=buildPeoplePicker($('qi_people'),qiNames,qiSel,null);
+  $('modalCancel').textContent='取消';$('modalCancel').onclick=closeModal;
+  ok.textContent='保存';
+  ok.onclick=async function(){
+    try{
+      var title=$('qi_title').value.trim();
+      if(!title){toast('请填行程标题');return;}
+      /* 日期控件是 yyyy-MM-dd，转回应用展示格式 yyyy.M.d 再入库 */
+      var date=toDispVal($('qi_date').value.trim());
+      var year=(date.match(/(\d{4})/)||[null,String(new Date().getFullYear())])[1];
+      await api('/api/trips','POST',{
+        title:title,sheet:title,date:date,year:Number(year),
+        status:$('qi_status').value,n:Number($('qi_n').value)||1,people:qiPicker.get(),
+        cities:$('qi_cities').value.split(/[、,，]/).map(function(x){return x.trim();}).filter(Boolean),
+        parentId:a.id},true);
+      toast('已记入「'+a.name+'」');
+      closeModal();resetModalFooter();loadActivities();
+      /* 若该大行程已展开，刷新其下子行程 */
+      var ctr=document.querySelector('tr[data-pid="'+a.id+'"]');
+      if(ctr&&!ctr.classList.contains('hidden')){loadActChildren(a,ctr.querySelector('tbody'));}
+    }catch(e){toast((e&&e.message)||'保存失败');}
+  };
+  $('modal').style.display='flex';
+}
+
+/* ---------------- 照片面板 ---------------- */
+var PHOTOS=[];          /* 当前行程照片元数据（与后端 JSON 一致） */
+var PH_AI={};           /* 照片 id -> 最近一次 AI 识别结果（用于「生成明细」） */
+/* multipart 专用：api() 只支持 JSON body，这里单独封装 FormData 请求（401 跳登录口径一致） */
+async function apiForm(path,fd){
+  var r=await fetch(path,{method:'POST',body:fd});
+  if(r.status===401){location.href='/login';throw new Error('unauthorized');}
+  if(!r.ok){
+    var msg='操作失败('+r.status+')';
+    try{var j=await r.json();if(j&&j.message)msg=j.message;else if(j&&j.error)msg=String(j.error);}catch(e){}
+    throw {status:r.status,message:msg};
+  }
+  return r;
+}
+$('photoBtn').onclick=async function(){
+  if(!curTrip){toast('请先打开某个行程的明细');return;}
+  var p=$('photoPanel');
+  if(p.style.display==='none'){$('aaPanel').style.display='none';p.style.display='block';await loadPhotos();}
+  else p.style.display='none';
+};
+async function loadPhotos(){
+  try{
+    var r=await api('/api/trips/'+curTrip+'/photos','GET');PHOTOS=await r.json();
+    renderPhotos();
+  }catch(e){toast((e&&e.message)||'照片加载失败');}
+}
+$('photoFile').onchange=async function(e){
+  var files=Array.prototype.slice.call(e.target.files||[]);
+  e.target.value='';
+  if(!files.length||!curTrip)return;
+  for(var i=0;i<files.length;i++){
+    var fd=new FormData();fd.append('file',files[i]);
+    toast('上传中 ('+(i+1)+'/'+files.length+')…');
+    try{await apiForm('/api/trips/'+curTrip+'/photos',fd);}
+    catch(err){toast((err&&err.message)||('上传失败：'+files[i].name));}
+  }
+  toast('上传完成');loadPhotos();
+};
+function renderPhotos(){
+  var g=$('photoGrid');g.innerHTML='';
+  if(!PHOTOS.length){g.innerHTML='<div class="hint">暂无照片</div>';return;}
+  PHOTOS.forEach(function(p){g.appendChild(photoCard(p));});
+}
+function photoCard(p){
+  var d=document.createElement('div');d.className='ph-card';
+  d.innerHTML='<a href="'+pesc(p.url)+'" target="_blank"><img src="'+pesc(p.thumbUrl||p.url)+'" alt="photo" loading="lazy"></a>'+
+    '<div class="fld"><label>城市</label><input data-pf="city" value="'+pesc(p.city||'')+'"></div>'+
+    '<div class="fld"><label>说明</label><input data-pf="caption" value="'+pesc(p.caption||'')+'"></div>'+
+    '<div class="ph-act"><button class="mini s" data-act="save">存</button>'+
+    '<button class="mini t" data-act="ai">AI 识别</button>'+
+    '<button class="mini d" data-act="del">删</button></div>';
+  var ai=PH_AI[p.id];
+  if(ai&&ai.type==='ticket'&&ai.amount){
+    var mk=document.createElement('button');mk.className='mini';mk.textContent='生成明细 ¥'+ai.amount;
+    mk.onclick=async function(){
+      try{
+        await api('/api/trips/'+curTrip+'/items','POST',
+          {d:ai.date||'',cat:'其他',name:ai.name||'照片消费',amt:Number(ai.amount)||0,payer:'',note:'来自照片识别：'+(ai.note||'')},true);
+        toast('明细已生成');openItems(curTrip);
+      }catch(err){toast((err&&err.message)||'生成失败');}
+    };
+    d.querySelector('.ph-act').appendChild(mk);
+  }
+  d.querySelector('[data-act=save]').onclick=async function(){
+    try{
+      await api('/api/photos/'+p.id,'PUT',
+        {city:d.querySelector('[data-pf=city]').value,caption:d.querySelector('[data-pf=caption]').value},true);
+      toast('已保存');
+    }catch(err){toast((err&&err.message)||'保存失败');}
+  };
+  d.querySelector('[data-act=del]').onclick=async function(){
+    if(!confirm('删除该照片？'))return;
+    try{await api('/api/photos/'+p.id,'DELETE');toast('已删除');loadPhotos();}
+    catch(err){toast((err&&err.message)||'删除失败');}
+  };
+  d.querySelector('[data-act=ai]').onclick=async function(){
+    toast('AI 识别中…');
+    try{
+      /* 面板里不保留原始 File，直接从 /photos/xxx 取回原图（该目录公开可读） */
+      var blob=await (await fetch(p.url)).blob();
+      var ext=(String(p.fileName).match(/\.(jpe?g|png|webp|gif)$/i)||['','.jpg'])[1].toLowerCase();
+      if(ext==='jpg')ext='jpeg';
+      var fd=new FormData();
+      fd.append('file',new Blob([blob],{type:'image/'+ext}),'photo.'+ext);
+      var r=await apiForm('/api/ai/photo',fd);var j=await r.json();
+      if(!j.ok){toast('识别失败：'+(j.error||''));return;}
+      /* 识别结果回填 city/caption 输入框并自动保存 */
+      var city=j.city||'',cap=(j.name?j.name+' ':'')+(j.note||'');
+      d.querySelector('[data-pf=city]').value=city;
+      d.querySelector('[data-pf=caption]').value=cap.trim();
+      PH_AI[p.id]=j;
+      await api('/api/photos/'+p.id,'PUT',{city:city,caption:cap.trim()},true);
+      toast('已识别并保存：'+(j.name||j.type||''));
+      await loadPhotos();
+    }catch(err){toast((err&&err.message)||'识别失败');}
+  };
+  return d;
+}
+
+(function(){var ts=document.getElementById('themeSel');if(ts){ts.value=getTheme();ts.onchange=function(){applyTheme(this.value);};}})();
+loadTrips();
+loadActivities();
+</script>
+</body>
+</html>

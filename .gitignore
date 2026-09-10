@@ -1,0 +1,23 @@
+# 编译产物
+target/
+
+# 运行时数据/凭据（绝不提交）
+.env
+.env.*
+!.env.example
+traveldb.mv.db
+traveldb.trace.db
+traveldb.lock.db
+travel-auth.json
+travel-secret.key
+*.key
+app.log
+photos/
+
+# 本地一次性备份目录（S0 修复等产生的快照）
+.s0-backup-*/
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store

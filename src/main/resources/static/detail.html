@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>行程明细 · 青春没有售价</title>
+<style>
+:root{--bg:#0b0a1f;--bg2:#141233;--panel:rgba(36,28,71,.55);--panel2:rgba(28,22,58,.85);--line:rgba(168,120,255,.22);--line2:rgba(255,120,200,.4);
+  --tx:#f3ecff;--tx2:#b9a8e6;--tx3:#7d6aa8;--pink:#ff5fa2;--purple:#9b6bff;--cyan:#46e6ff;--orange:#ffb14e;--green:#5cf2a8;--yellow:#ffe066;
+  --land:#241c4d;--landline:#3a2e6e;
+  --g1:rgba(155,107,255,.25);--g2:rgba(255,95,162,.20);--g3:rgba(70,230,255,.14);
+  --cat-eat:#46e6ff;--cat-stay:#5cf2a8;--cat-go:#ff8a4e;--cat-ticket:#ffb14e;--cat-other:#9b6bff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--tx);min-height:100vh;
+  background:radial-gradient(1000px 700px at 12% -10%,var(--g1),transparent 55%),
+             radial-gradient(900px 600px at 92% 110%,var(--g2),transparent 55%),linear-gradient(160deg,var(--bg),var(--bg2));
+  background-attachment:fixed;padding:14px 18px 40px}
+a{color:var(--cyan);text-decoration:none}
+.hd{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.hd h1{font-size:clamp(18px,2.6vw,28px);font-weight:800;letter-spacing:.12em;
+  background:linear-gradient(92deg,var(--cyan),var(--purple) 45%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+.bar input,.bar select{height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);padding:0 12px;font-size:14px;outline:none}
+.bar input{flex:1;min-width:160px}
+.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;backdrop-filter:blur(6px)}
+.mapcard{position:relative;padding:8px}
+#mapsvg{width:100%;height:auto;display:block}
+.prov{fill:var(--land);stroke:var(--landline);stroke-width:.6}.cityp{stroke:var(--bg);stroke-width:.4;transition:fill .2s}.cityp.on{stroke:#fff;stroke-width:.8}
+.mnow{position:absolute;left:12px;top:12px;background:rgba(11,10,31,.6);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px}
+.list{display:flex;flex-direction:column;gap:10px;max-height:70vh;overflow:auto}
+.trip{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;transition:.15s}
+.trip:hover{border-color:var(--pink)}
+.trip.sel{border-color:var(--pink);box-shadow:0 0 16px rgba(255,95,162,.3)}
+.trip .t1{display:flex;align-items:center;gap:8px}.trip .tt{font-weight:700;font-size:15px}.trip .st{margin-left:auto;font-size:11px;padding:2px 8px;border-radius:999px}
+.st.done{background:rgba(92,242,168,.18);color:var(--green)}.st.plan{background:rgba(255,177,78,.18);color:var(--orange)}
+.trip .t2{font-size:12px;color:var(--tx3);margin-top:4px}
+.detail{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:none}
+.trip.sel .detail{display:block}
+.route{font-size:13px;color:var(--tx2);line-height:2}.route b{color:var(--cyan)}.route s{color:var(--tx3);text-decoration:none;margin:0 4px}
+.cbar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:8px 0}.cbar i{flex:0 0 auto}
+.cbl{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--tx2)}.cbl span{display:flex;align-items:center;gap:4px}.cbl i{width:9px;height:9px;border-radius:2px}
+table.it{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}.it th{color:var(--tx3);text-align:left;padding:5px 4px;border-bottom:1px solid var(--line)}
+.it td{padding:5px 4px;border-bottom:1px solid rgba(255,255,255,.05)}.it td.a{text-align:right;color:var(--cyan)}.it td.n{color:var(--tx)}
+.userchip{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)}
+.userchip .un{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.userchip a{color:var(--cyan);text-decoration:none;font-size:12px}
+.userchip a.out{color:#ff7a8a}
+@media(max-width:840px){.grid{grid-template-columns:1fr}.list{max-height:none}}
+</style>
+<script>
+(function(){
+  var THEMES={
+    aurora:{
+      '--bg':'#06121a','--bg2':'#0a1f2b',
+      '--panel':'rgba(16,40,52,.55)','--panel2':'rgba(10,30,42,.85)',
+      '--line':'rgba(80,200,210,.18)','--line2':'rgba(80,230,200,.40)',
+      '--tx':'#e8fbff','--tx2':'#9fd4d8','--tx3':'#5e8a90',
+      '--pink':'#7af0c8','--purple':'#5b8cff','--cyan':'#3fe0d0','--orange':'#ffb05a','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#10232e','--landline':'#1f4a52',
+      '--g1':'rgba(91,140,255,.25)','--g2':'rgba(63,224,208,.20)','--g3':'rgba(92,242,168,.14)',
+      '--cat-eat':'#3fe0d0','--cat-stay':'#5cf2a8','--cat-go':'#5b8cff','--cat-ticket':'#ffb05a','--cat-other':'#9a8cff'
+    },
+    sunset:{
+      '--bg':'#160d12','--bg2':'#241016',
+      '--panel':'rgba(54,30,36,.55)','--panel2':'rgba(40,22,28,.86)',
+      '--line':'rgba(255,170,120,.20)','--line2':'rgba(255,140,90,.40)',
+      '--tx':'#fff1e8','--tx2':'#e3b79c','--tx3':'#a87a64',
+      '--pink':'#ff6f91','--purple':'#ff9e5e','--cyan':'#ffd166','--orange':'#ffb05a','--green':'#7fd99a','--yellow':'#ffe08a',
+      '--land':'#2a161c','--landline':'#5a2e34',
+      '--g1':'rgba(255,140,80,.26)','--g2':'rgba(255,95,140,.20)','--g3':'rgba(255,200,120,.16)',
+      '--cat-eat':'#ffb05a','--cat-stay':'#7fd99a','--cat-go':'#ffd166','--cat-ticket':'#ff6f91','--cat-other':'#c98cff'
+    },
+    neon:{
+      '--bg':'#0b0a1f','--bg2':'#141233',
+      '--panel':'rgba(36,28,71,.55)','--panel2':'rgba(28,22,58,.85)',
+      '--line':'rgba(168,120,255,.22)','--line2':'rgba(255,120,200,.40)',
+      '--tx':'#f3ecff','--tx2':'#b9a8e6','--tx3':'#7d6aa8',
+      '--pink':'#ff5fa2','--purple':'#9b6bff','--cyan':'#46e6ff','--orange':'#ffb14e','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#241c4d','--landline':'#3a2e6e',
+      '--g1':'rgba(155,107,255,.25)','--g2':'rgba(255,95,162,.20)','--g3':'rgba(70,230,255,.14)',
+      '--cat-eat':'#46e6ff','--cat-stay':'#5cf2a8','--cat-go':'#ff8a4e','--cat-ticket':'#ffb14e','--cat-other':'#9b6bff'
+    }
+  };
+  var KEY='screenTheme';
+  function applyTheme(n){var t=THEMES[n]||THEMES.aurora,r=document.documentElement;for(var k in t){if(t.hasOwnProperty(k))r.style.setProperty(k,t[k]);}try{localStorage.setItem(KEY,n);}catch(e){}try{window.dispatchEvent(new CustomEvent('themechange',{detail:{name:n}}));}catch(e){}}
+  function getTheme(){try{return localStorage.getItem(KEY)||'aurora';}catch(e){return 'aurora';}}
+  window.THEMES=THEMES;window.applyTheme=applyTheme;window.getTheme=getTheme;
+  applyTheme(getTheme());
+})();
+</script>
+</head>
+<body>
+<div class="hd"><a href="/">← 大屏</a><h1>行程明细 · 青春没有售价</h1><select id="themeSel" style="height:34px;padding:0 10px;font-size:13px;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--tx)"><option value="aurora">极光蓝绿</option><option value="sunset">暖阳橙金</option><option value="neon">霓虹紫粉</option></select><span class="userchip" id="u"></span></div>
+<div class="bar">
+  <input id="q" placeholder="搜索标题 / 城市 / 同行人">
+  <select id="yr"><option value="">全部年份</option></select>
+  <select id="st"><option value="">全部状态</option><option value="done">已完成</option><option value="plan">计划中</option></select>
+</div>
+<div class="grid">
+  <div class="card mapcard"><div class="mnow" id="mnow">全国足迹总览</div><svg id="mapsvg"></svg></div>
+  <div class="card"><div class="list" id="list"></div></div>
+</div>
+<script>
+(function(){
+'use strict';
+var D,TRIPS,GEO,LIT,PJ={minx:0,maxx:1,miny:0,maxy:1,W:1000,H:820},CITY_EL={},SEL=null;
+var CAT_KEY={'行':'go','门票':'ticket','吃':'eat','住':'stay','其他':'other'};
+var CATC={};
+function rebuildCat(){var s=getComputedStyle(document.documentElement);for(var k in CAT_KEY){if(CAT_KEY.hasOwnProperty(k)){CATC[k]=s.getPropertyValue('--cat-'+CAT_KEY[k]).trim()||'#888';}}}
+rebuildCat();
+window.addEventListener('themechange',rebuildCat);
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function money(n){n=Number(n)||0;return '¥'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function money0(n){n=Math.round(Number(n)||0);return '¥'+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function mercX(l){return l*Math.PI/180;}function mercY(l){return -Math.log(Math.tan((90+l)*Math.PI/360));}
+function initProj(){var xs=[],ys=[];for(var i=0;i<GEO.provinces.length;i++)for(var j=0;j<GEO.provinces[i].p.length;j++){var r=GEO.provinces[i].p[j];for(var k=0;k<r.length;k++){xs.push(mercX(r[k][0]));ys.push(mercY(r[k][1]));}}
+  PJ.minx=Math.min.apply(null,xs);PJ.maxx=Math.max.apply(null,xs);PJ.miny=Math.min.apply(null,ys);PJ.maxy=Math.max.apply(null,ys);PJ.W=1000;PJ.H=Math.round(1000*(PJ.maxy-PJ.miny)/(PJ.maxx-PJ.minx));}
+function PX(l){return (mercX(l)-PJ.minx)/(PJ.maxx-PJ.minx)*PJ.W;}function PY(l){return (mercY(l)-PJ.miny)/(PJ.maxy-PJ.miny)*PJ.H;}
+function rp(r){var d='';for(var i=0;i<r.length;i++)d+=(i?'L':'M')+PX(r[i][0]).toFixed(1)+' '+PY(r[i][1]).toFixed(1);return d+'Z';}
+function pp(p){var d='';for(var i=0;i<p.length;i++)d+=rp(p[i]);return d;}
+function buildBase(){var g=$('mapsvg'),h='<g id="g-prov">';for(var i=0;i<GEO.provinces.length;i++)h+='<path class="prov" d="'+pp(GEO.provinces[i].p)+'"/>';
+  h+='</g><g id="g-city">';for(i=0;i<GEO.cities.length;i++){var c=GEO.cities[i],st=LIT[c.a];if(!st)continue;h+='<path class="cityp" data-a="'+c.a+'" data-n="'+esc(c.n)+'" fill="'+heat(st.v)+'" fill-opacity="0.85" d="'+pp(c.p)+'"/>';}
+  h+='</g><g id="g-route"></g><g id="g-pt"></g>';g.innerHTML=h;g.setAttribute('viewBox','0 0 '+PJ.W+' '+PJ.H);
+  var els=g.querySelectorAll('path.cityp');for(i=0;i<els.length;i++)CITY_EL[els[i].getAttribute('data-a')]=els[i];}
+function heat(v){var H=[[1,'#3a2e6e'],[2,'#6a3fa0'],[4,'#9b6bff'],[7,'#ff5fa2'],[999,'#ffb14e']];for(var i=0;i<H.length;i++)if(v<=H[i][0])return H[i][1];return '#ffb14e';}
+function renderMap(){var t=null;if(SEL)for(var i=0;i<TRIPS.length;i++)if(TRIPS[i].id===SEL)t=TRIPS[i];
+  var on={};if(t)for(i=0;i<(t.route||[]).length;i++)on[t.route[i]]=1;
+  for(var a in CITY_EL){if(!CITY_EL.hasOwnProperty(a))continue;var el=CITY_EL[a];
+    if(on[a]){el.classList.add('on');el.setAttribute('fill','#ffd166');el.setAttribute('fill-opacity','.96');}
+    else{el.classList.remove('on');var st=LIT[a];el.setAttribute('fill',st?heat(st.v):'#3a2e6e');el.setAttribute('fill-opacity','0.85');}}
+  var g=$('g-route'),p=$('g-pt');
+  if(!t||!t.path||t.path.length<2){g.innerHTML='';p.innerHTML='';}
+  else{var d='';for(i=0;i<t.path.length;i++)d+=(i?'L':'M')+PX(t.path[i][0]).toFixed(1)+' '+PY(t.path[i][1]).toFixed(1);
+    g.innerHTML='<path d="'+d+'" fill="none" stroke="#ff5fa2" stroke-width="1.6" stroke-opacity=".9"/>';
+    var dots='';for(i=0;i<t.path.length;i++){dots+='<circle cx="'+PX(t.path[i][0]).toFixed(1)+'" cy="'+PY(t.path[i][1]).toFixed(1)+'" r="3" fill="#ffd166"/>';}
+    p.innerHTML=dots;}
+  $('mnow').innerHTML=t?('<b>'+esc(t.title)+'</b> · '+esc(t.date)):'全国足迹总览 · 点下方行程查看路线';}
+
+function renderList(){
+  var q=$('q').value.trim(),yr=$('yr').value,st=$('st').value;
+  var arr=TRIPS.filter(function(t){
+    if(yr&&String(t.year)!==yr)return false;if(st&&t.status!==st)return false;
+    if(q){var s=(t.title+' '+(t.cities||[]).join(' ')+(t.people||[]).join(' ')).toLowerCase();if(s.indexOf(q.toLowerCase())<0)return false;}
+    return true;});
+  var h='';
+  arr.forEach(function(t){var on=t.id===SEL?' sel':'';var cats=Object.keys(t.cats||{});
+    h+='<div class="trip'+on+'" data-id="'+t.id+'"><div class="t1"><span class="tt">'+esc(t.title)+'</span><span class="st '+t.status+'">'+(t.status==='done'?'已完成':'计划中')+'</span></div>';
+    h+='<div class="t2">'+esc(t.date)+' · '+(t.people&&t.people.length?t.people.slice(0,3).join('、')+(t.people.length>3?' 等':''):'独行')+' · '+t.cities.length+' 站'+(t.total?(' · '+money0(t.total)):'')+'</div>';
+    h+='<div class="detail">';
+    if(t.cities&&t.cities.length){var ns=t.cities.filter(function(x,i,a){return a.indexOf(x)===i;});h+='<div class="route">'+ns.map(function(x){return '<b>'+esc(x)+'</b>';}).join('<s>→</s>')+'</div>';}
+    if(cats.length){var tot=0;cats.forEach(function(c){tot+=t.cats[c];});h+='<div class="cbar">';cats.forEach(function(c){h+='<i style="width:'+(t.cats[c]/tot*100).toFixed(1)+'%;background:'+(CATC[c]||'#888')+'"></i>';});h+='</div><div class="cbl">';cats.forEach(function(c){h+='<span><i style="background:'+(CATC[c]||'#888')+'"></i>'+esc(c)+' '+money0(t.cats[c])+'</span>';});h+='</div>';}
+    if(t.items&&t.items.length){h+='<table class="it"><thead><tr><th>项目</th><th>类别</th><th>备注</th><th style="text-align:right">金额</th></tr></thead><tbody>';
+      t.items.forEach(function(it){h+='<tr><td class="n">'+esc(it.name||'—')+'</td><td>'+esc(it.cat||'')+'</td><td>'+esc(it.note||'')+'</td><td class="a">'+money(it.amt)+'</td></tr>';});
+      h+='</tbody></table>';}
+    h+='</div></div>';});
+  $('list').innerHTML=h||'<div style="padding:20px;color:#7d6aa8">没有匹配的行程</div>';
+  Array.prototype.forEach.call($('list').querySelectorAll('.trip'),function(el){el.onclick=function(){SEL=el.getAttribute('data-id');renderMap();renderList();};});
+}
+async function init(){
+  var r=await fetch('/api/screen-data');if(r.status===401){location.href='/login';return;}
+  D=await r.json();TRIPS=D.trips;GEO=D.geo;LIT=D.lit;
+  // 账号/退出
+  fetch('/api/me').then(function(rr){return rr.ok?rr.json():null;}).then(function(me){if(me)$('u').innerHTML='<span class="un">'+esc(me.avatar||'👤')+' '+esc(me.codename||me.displayName||me.username)+'</span><a href="/profile">个人</a><a class="out" href="/logout">退出</a>';});
+  // 年份下拉
+  var ys=[];TRIPS.forEach(function(t){if(t.year&&ys.indexOf(t.year)<0)ys.push(t.year);});ys.sort();
+  ys.forEach(function(y){var o=document.createElement('option');o.value=y;o.textContent=y+' 年';$('yr').appendChild(o);});
+  initProj();buildBase();renderMap();renderList();
+  $('q').oninput=renderList;$('yr').onchange=renderList;$('st').onchange=renderList;
+  var ts=document.getElementById('themeSel');if(ts){ts.value=getTheme();ts.onchange=function(){applyTheme(this.value);};}
+  window.addEventListener('themechange',function(){try{renderMap();renderList();}catch(e){}});
+}
+init();
+})();
+</script>
+</body>
+</html>

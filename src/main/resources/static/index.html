@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="qA5L6zvSh8tEzfLG5XpQlj">
+<head data-page-node-id="HqGg30UT2OzLPUQYzzF4RH">
+<meta charset="utf-8" data-page-node-id="fN64kkFClQstraJbDklWCp">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="3Yf1BL3DID3QEZtFtJ29Va">
+<title>青春没有售价 · 旅行足迹大屏</title>
+<style>
+:root{
+  --bg:#0b0a1f; --bg2:#141233; --panel:rgba(36,28,71,.55); --panel2:rgba(28,22,58,.82);
+  --line:rgba(168,120,255,.22); --line2:rgba(255,120,200,.4);
+  --tx:#f3ecff; --tx2:#b9a8e6; --tx3:#7d6aa8;
+  --pink:#ff5fa2; --purple:#9b6bff; --cyan:#46e6ff; --orange:#ffb14e; --green:#5cf2a8; --yellow:#ffe066;
+  --land:#241c4d; --landline:#3a2e6e;
+  --g1:rgba(155,107,255,.28); --g2:rgba(255,95,162,.22); --g3:rgba(70,230,255,.18);
+  --cat-eat:#46e6ff; --cat-stay:#5cf2a8; --cat-go:#ff8a4e; --cat-ticket:#ffb14e; --cat-other:#9b6bff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:auto}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--tx); -webkit-font-smoothing:antialiased; min-height:100vh;
+  background:
+    radial-gradient(1100px 700px at 12% -10%, var(--g1), transparent 55%),
+    radial-gradient(1000px 700px at 92% 0%, var(--g2), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, var(--g3), transparent 55%),
+    linear-gradient(160deg,var(--bg),var(--bg2));
+  background-attachment:fixed;
+}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+/* 布局 */
+#wrap{max-width:1680px;margin:0 auto;padding:14px 18px 40px;display:flex;flex-direction:column;gap:14px}
+.hd{position:relative;display:flex;align-items:center;justify-content:center;padding:8px 0 14px}
+.hd::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),var(--pink),var(--purple),transparent)}
+.hd h1{font-size:clamp(22px,3.4vw,40px);font-weight:800;letter-spacing:.14em;
+  background:linear-gradient(92deg,var(--cyan),var(--purple) 45%,var(--pink) 80%,var(--orange));
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:flow 6s linear infinite;text-shadow:0 0 30px rgba(155,107,255,.35)}
+@keyframes flow{to{background-position:220% 0}}
+.hd .sub{position:absolute;left:0;top:14px;font-size:12px;color:var(--tx3);letter-spacing:1px}
+.hd .sub b{color:var(--cyan)}
+.hd .clock{position:absolute;right:0;top:14px;text-align:right;font-size:12px;color:var(--tx3);letter-spacing:1px}
+/* 控制条 */
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.btn{border:1px solid var(--line2);background:var(--panel2);color:var(--tx);
+  height:38px;padding:0 16px;border-radius:999px;font-size:14px;cursor:pointer;
+  transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--pink);box-shadow:0 0 16px rgba(255,95,162,.35)}
+.btn.act{background:linear-gradient(92deg,var(--purple),var(--pink));border-color:transparent;color:#fff;font-weight:700}
+.btn.lit{background:linear-gradient(92deg,#ffb14e,#ff5fa2);border-color:transparent;color:#fff;font-weight:700}
+.tag{font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(70,230,255,.16);color:var(--cyan)}
+.tag.red{background:rgba(255,95,162,.2);color:var(--pink)}
+/* 账号胶囊 */
+.acct{position:relative;margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 6px 0 10px;
+  border:1px solid var(--line2);background:var(--panel2);border-radius:999px;cursor:pointer;transition:.15s}
+.acct:hover{border-color:var(--cyan)}
+.acct .av{width:26px;height:26px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;
+  background:linear-gradient(135deg,var(--purple),var(--pink))}
+.acct .nm{font-size:13px;color:var(--tx);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .ar{color:var(--tx3);font-size:10px;margin-right:2px}
+.acct .gear{font-size:15px;line-height:1;padding:2px 4px;border-radius:8px}
+.acct .gear:hover{background:rgba(70,230,255,.18)}
+.acct-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:168px;background:rgba(20,15,45,.97);
+  border:1px solid var(--line2);border-radius:12px;padding:6px;z-index:30;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.acct-menu.open{display:block;animation:pop .2s ease}
+.acct-menu a,.acct-menu .it{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;text-align:left;
+  color:var(--tx);text-decoration:none;font-size:13px;padding:9px 10px;border-radius:8px;cursor:pointer;background:none;border:none}
+.acct-menu a:hover,.acct-menu .it:hover{background:rgba(155,107,255,.18)}
+.acct-menu .sep{height:1px;background:var(--line);margin:5px 6px}
+.acct-menu .out{color:#ff7a8a}
+.acct-menu .hd2{font-size:11px;color:var(--tx3);padding:4px 10px 2px}
+.demo-pill{display:inline-flex;align-items:center;gap:6px;margin-left:auto;height:38px;padding:0 16px;border-radius:999px;
+  border:1px dashed rgba(255,224,102,.6);color:var(--yellow);font-size:13px;cursor:pointer;background:rgba(255,224,102,.06)}
+.demo-pill:hover{background:rgba(255,224,102,.14)}
+/* 设置小面板 */
+#setModal{position:fixed;inset:0;background:rgba(6,5,18,.6);display:none;align-items:center;justify-content:center;z-index:40}
+#setCard{width:300px;background:var(--panel2);border:1px solid var(--line2);border-radius:16px;padding:20px}
+#setCard h3{font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+#setCard .fld{margin-bottom:12px}
+#setCard label{display:block;font-size:12px;color:var(--tx2);margin-bottom:5px}
+#setCard input{width:100%;height:38px;border-radius:9px;border:1px solid var(--line);background:rgba(11,10,31,.6);color:var(--tx);padding:0 10px;font-size:14px;outline:none}
+#setCard input:focus{border-color:var(--pink)}
+#setCard .rbar{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+#setCard .x{position:static;float:right;margin-top:-6px;font-size:20px;color:var(--tx3);cursor:pointer}
+/* 网格 */
+.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+.col{display:flex;flex-direction:column;gap:14px}
+.subrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.subrow .sub2{min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+  backdrop-filter:blur(6px);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.card h3{font-size:13px;color:var(--tx2);letter-spacing:2px;margin-bottom:10px;font-weight:600;
+  display:flex;align-items:center;gap:8px}
+.card h3::before{content:"";width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(92deg,var(--cyan),var(--pink));box-shadow:0 0 10px var(--pink)}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.kpi .lb{font-size:12px;color:var(--tx3)}
+.kpi .v{font-size:clamp(18px,2.4vw,28px);font-weight:800;margin-top:4px;
+  background:linear-gradient(92deg,var(--cyan),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.kpi.o .v{background:linear-gradient(92deg,var(--orange),var(--yellow));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* 地图 */
+.mapcard{position:relative;padding:8px;min-height:520px}
+#mapsvg{width:100%;height:auto;display:block}
+.prov{fill:var(--land);stroke:var(--landline);stroke-width:.6}
+.cityp{stroke:#0b0a1f;stroke-width:.4;transition:fill .25s}
+.cityp.on{stroke:#fff;stroke-width:.8}
+#tip{position:absolute;pointer-events:none;display:none;background:rgba(20,15,45,.95);
+  border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font-size:12px;max-width:280px;z-index:5;
+  box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#tip b{color:var(--pink)} #tip .m{color:var(--tx2);margin-top:3px;line-height:1.5}
+#nsisvg{position:absolute;right:10px;bottom:10px;width:88px;height:128px;opacity:.9;
+  border:1px solid var(--line);border-radius:6px;background:rgba(11,10,31,.6)}
+.mnow{position:absolute;left:14px;top:14px;max-width:60%;
+  background:rgba(11,10,31,.55);border:1px solid var(--line);border-radius:12px;padding:10px 14px;backdrop-filter:blur(4px)}
+.mnow .n1{font-size:18px;font-weight:800;color:#fff}
+.mnow .n2{font-size:13px;color:var(--tx2);margin-top:3px}
+.alllit-banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);
+  background:linear-gradient(92deg,var(--orange),var(--pink),var(--purple));color:#fff;font-weight:800;
+  padding:8px 20px;border-radius:999px;font-size:15px;letter-spacing:1px;box-shadow:0 0 24px rgba(255,95,162,.5);
+  display:none;animation:pop .4s ease}
+@keyframes pop{from{transform:translateX(-50%) scale(.7);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+/* 路线图例 */
+.route-legend{position:absolute;right:10px;top:104px;max-height:62%;width:204px;overflow:auto;
+  background:rgba(11,10,31,.84);border:1px solid var(--line);border-radius:12px;padding:8px 10px;
+  display:none;backdrop-filter:blur(6px);font-size:12px;z-index:4}
+/* 地图控制条：放在地图上方，不浮在地图上，避免遮挡地图/按钮/信息 */
+.mapbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:0 8px 8px}
+.route-legend.show{display:block;animation:pop .3s ease}
+/* 全部点亮横幅限制宽度，避免伸到右侧卡片下 */
+.alllit-banner{max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.route-legend .lh{font-size:11px;color:var(--tx3);letter-spacing:1px;margin-bottom:6px;position:sticky;top:0;background:rgba(11,10,31,.6);padding-bottom:4px}
+.route-legend .ri{display:flex;align-items:center;gap:8px;padding:4px 4px;border-radius:8px;cursor:pointer}
+.route-legend .ri:hover{background:rgba(155,107,255,.16)}
+.route-legend .sw{width:12px;height:12px;border-radius:3px;flex:0 0 auto}
+.route-legend .rt{color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.route-legend .rn{color:var(--tx3);font-size:10px;margin-left:6px}
+/* 榜单/流水 */
+.r{position:relative;padding:8px 4px;border-radius:10px;cursor:pointer;transition:.15s}
+.r:hover{background:rgba(155,107,255,.12)}
+.r.on{background:rgba(255,95,162,.14)}
+.r .l1{display:flex;align-items:center;gap:8px;font-size:13px}
+.r .i{width:20px;height:20px;border-radius:50%;background:linear-gradient(92deg,var(--purple),var(--pink));
+  color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.r .nm{font-weight:600;color:var(--tx)}
+.r .vl{margin-left:auto;color:var(--cyan);font-weight:700}
+.r .tr{height:5px;background:rgba(255,255,255,.06);border-radius:3px;margin:6px 0 4px;overflow:hidden}
+.r .tr i{display:block;height:100%;background:linear-gradient(92deg,var(--cyan),var(--pink));border-radius:3px}
+.r .l2{font-size:11px;color:var(--tx3)}
+.r.p .i{background:linear-gradient(92deg,var(--orange),var(--yellow))}
+/* 甜甜圈 */
+.donut-wrap{display:flex;align-items:center;gap:14px}
+#donut{flex:0 0 150px}
+.rg{display:flex;flex-direction:column;gap:5px;font-size:12px;flex:1}
+.rg .r0{display:flex;align-items:center;gap:8px}
+.rg i{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.rg .nm{color:var(--tx2)} .rg .vl{margin-left:auto;color:var(--tx)} .rg .pc{color:var(--tx3);width:46px;text-align:right}
+/* 年份 */
+.ybars{display:flex;align-items:flex-end;gap:10px;height:130px;padding-top:6px}
+.y{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:4px}
+.y .amt{font-size:10px;color:var(--tx3)}
+.y .bar{width:70%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--cyan),var(--purple));min-height:4px}
+.y.cur .bar{background:linear-gradient(180deg,var(--pink),var(--orange))}
+.y .yr{font-size:11px;color:var(--tx2)} .y .cnt{font-size:10px;color:var(--tx3)}
+/* 流水 */
+#flowul{list-style:none;font-size:12px;line-height:2;overflow:hidden;height:170px;position:relative}
+#flowul li{display:flex;gap:8px;white-space:nowrap}
+#flowul .c{color:var(--pink);flex:0 0 auto} #flowul .n{color:var(--tx2);overflow:hidden;text-overflow:ellipsis}
+#flowul .a{margin-left:auto;color:var(--cyan);flex:0 0 auto}
+/* 抽屉 */
+#mask{position:fixed;inset:0;background:rgba(6,5,18,.6);display:none;z-index:20}
+#drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,92vw);background:var(--panel2);
+  border-left:1px solid var(--line2);transform:translateX(100%);transition:.28s;z-index:21;overflow:auto;padding:20px}
+#drawer.open{transform:translateX(0);box-shadow:-10px 0 40px rgba(0,0,0,.5)}
+#drawer h2{font-size:20px;font-weight:800;background:linear-gradient(92deg,var(--cyan),var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+#dmeta{font-size:12px;color:var(--tx3);margin:4px 0 14px}
+.blk{margin-bottom:14px}.bt{font-size:13px;color:var(--tx2);margin-bottom:6px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:12px;padding:3px 10px;border-radius:999px;
+  background:rgba(155,107,255,.18);color:var(--purple)}
+.chip.o{background:rgba(255,95,162,.18);color:var(--pink)}
+.route{font-size:13px;color:var(--tx2);line-height:2}.route b{color:var(--cyan)}.route s{color:var(--tx3);text-decoration:none;margin:0 4px}
+.cbar{display:flex;height:14px;border-radius:7px;overflow:hidden}.cbar i{flex:0 0 auto}
+.cbl{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--tx2);margin-top:6px}
+.cbl span{display:flex;align-items:center;gap:4px}.cbl i{width:9px;height:9px;border-radius:2px}
+table.it{width:100%;border-collapse:collapse;font-size:12px}.it th{color:var(--tx3);text-align:left;padding:5px 4px;border-bottom:1px solid var(--line)}
+.it td{padding:5px 4px;border-bottom:1px solid rgba(255,255,255,.05)}.it td.a{text-align:right;color:var(--cyan)}
+.it td.n{color:var(--tx)}
+.x{position:absolute;right:16px;top:16px;cursor:pointer;color:var(--tx3);font-size:22px;line-height:1}
+/* 顶部滚动 */
+.ticker{display:flex;align-items:center;gap:14px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:999px;padding:8px 18px;overflow:hidden}
+.ticker .tag{flex:0 0 auto}
+#tkitems{display:flex;gap:30px;white-space:nowrap;animation:scroll 26s linear infinite;font-size:13px;color:var(--tx2)}
+#tkitems b{color:var(--tx)} #tkitems .hot{color:var(--orange)} #tkitems .red{color:var(--pink)}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+#narrow{display:none}
+/* ===== 3D 地图（ECharts GL）===== */
+#map3d{position:absolute;left:8px;right:8px;top:8px;bottom:8px;z-index:2;display:none}
+.mnow,.alllit-banner{z-index:3}
+/* ===== 城市照片墙 ===== */
+#pwMask{position:fixed;inset:0;background:rgba(6,5,18,.88);backdrop-filter:blur(10px);
+  display:none;z-index:50;overflow:auto;padding:24px 4vw 40px}
+#pwMask.open{display:block}
+.pw-head{max-width:1400px;margin:0 auto 18px;display:flex;align-items:center;gap:14px}
+.pw-head .t{font-size:clamp(20px,3vw,30px);font-weight:800;letter-spacing:.08em;
+  background:linear-gradient(92deg,var(--cyan),var(--purple) 45%,var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.pw-head .n{font-size:13px;color:var(--tx3)}
+.pw-head .x{margin-left:auto;border:1px solid var(--line2);background:var(--panel2);color:var(--tx);
+  height:34px;padding:0 16px;border-radius:999px;font-size:13px;cursor:pointer;transition:.15s}
+.pw-head .x:hover{border-color:var(--pink);box-shadow:0 0 16px rgba(255,95,162,.35)}
+.pw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;max-width:1400px;margin:0 auto}
+.pw-item{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  transition:.2s;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.pw-item:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:0 10px 34px rgba(255,95,162,.25)}
+.pw-item img{width:100%;height:172px;object-fit:cover;display:block;background:#1c163a}
+.pw-item .cap{font-size:12px;color:var(--tx2);padding:9px 11px;line-height:1.55}
+.pw-empty{text-align:center;color:var(--tx3);font-size:14px;padding:60px 0}
+/* 手机适配 */
+@media (max-width:880px){
+  .grid{grid-template-columns:1fr}
+  .subrow{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .hd .sub,.hd .clock{display:none}
+  #narrow{display:block;text-align:center;font-size:12px;color:var(--tx3);margin-top:4px}
+  .mnow{max-width:90%}
+  .donut-wrap{flex-direction:column}
+  #drawer{width:100vw}
+}
+</style>
+<script>
+(function(){
+  /* 多主题机制：THEMES 定义每套主题的 CSS 变量值，applyTheme 写到 :root（documentElement）
+     上；各文件原生 :root 作为兜底默认值。选择写入 localStorage(screenTheme)。 */
+  var THEMES={
+    aurora:{
+      '--bg':'#06121a','--bg2':'#0a1f2b',
+      '--panel':'rgba(16,40,52,.55)','--panel2':'rgba(10,30,42,.85)',
+      '--line':'rgba(80,200,210,.18)','--line2':'rgba(80,230,200,.40)',
+      '--tx':'#e8fbff','--tx2':'#9fd4d8','--tx3':'#5e8a90',
+      '--pink':'#7af0c8','--purple':'#5b8cff','--cyan':'#3fe0d0','--orange':'#ffb05a','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#1e4a5d','--landline':'#3d7a8e',
+      '--g1':'rgba(91,140,255,.26)','--g2':'rgba(63,224,208,.20)','--g3':'rgba(92,242,168,.16)',
+      '--cat-eat':'#3fe0d0','--cat-stay':'#5cf2a8','--cat-go':'#5b8cff','--cat-ticket':'#ffb05a','--cat-other':'#9a8cff'
+    },
+    sunset:{
+      '--bg':'#160d12','--bg2':'#241016',
+      '--panel':'rgba(54,30,36,.55)','--panel2':'rgba(40,22,28,.86)',
+      '--line':'rgba(255,170,120,.20)','--line2':'rgba(255,140,90,.40)',
+      '--tx':'#fff1e8','--tx2':'#e3b79c','--tx3':'#a87a64',
+      '--pink':'#ff6f91','--purple':'#ff9e5e','--cyan':'#ffd166','--orange':'#ffb05a','--green':'#7fd99a','--yellow':'#ffe08a',
+      '--land':'#4a262c','--landline':'#7a4e54',
+      '--g1':'rgba(255,140,80,.28)','--g2':'rgba(255,95,140,.22)','--g3':'rgba(255,200,120,.18)',
+      '--cat-eat':'#ffb05a','--cat-stay':'#7fd99a','--cat-go':'#ffd166','--cat-ticket':'#ff6f91','--cat-other':'#c98cff'
+    },
+    neon:{
+      '--bg':'#0b0a1f','--bg2':'#141233',
+      '--panel':'rgba(36,28,71,.55)','--panel2':'rgba(28,22,58,.85)',
+      '--line':'rgba(168,120,255,.22)','--line2':'rgba(255,120,200,.40)',
+      '--tx':'#f3ecff','--tx2':'#b9a8e6','--tx3':'#7d6aa8',
+      '--pink':'#ff5fa2','--purple':'#9b6bff','--cyan':'#46e6ff','--orange':'#ffb14e','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#241c4d','--landline':'#3a2e6e',
+      '--g1':'rgba(155,107,255,.28)','--g2':'rgba(255,95,162,.22)','--g3':'rgba(70,230,255,.18)',
+      '--cat-eat':'#46e6ff','--cat-stay':'#5cf2a8','--cat-go':'#ff8a4e','--cat-ticket':'#ffb14e','--cat-other':'#9b6bff'
+    }
+  };
+  var KEY='screenTheme';
+  function applyTheme(n){var t=THEMES[n]||THEMES.aurora,r=document.documentElement;for(var k in t){if(t.hasOwnProperty(k))r.style.setProperty(k,t[k]);}try{localStorage.setItem(KEY,n);}catch(e){}try{window.dispatchEvent(new CustomEvent('themechange',{detail:{name:n}}));}catch(e){}}
+  function getTheme(){try{return localStorage.getItem(KEY)||'aurora';}catch(e){return 'aurora';}}
+  window.THEMES=THEMES;window.applyTheme=applyTheme;window.getTheme=getTheme;
+  applyTheme(getTheme()); /* 早期应用，避免首屏闪白 */
+})();
+</script>
+</head>
+<body data-page-node-id="UHZvFyc0nEl2Shw6TIR8mp">
+<div id="wrap" data-page-node-id="19Ik7j2lUGbCmaDMqbMI8I">
+  <div class="hd" data-page-node-id="jn3qMT8YjEuiY3iNV6aY69">
+    <div class="sub" data-page-node-id="mlbBF4NCdp3RhNtR37TNSK">青春没有售价 · <b data-page-node-id="GDV7KeKxeBpau7eXi5cBSg">旅行足迹大屏</b></div>
+    <h1 data-page-node-id="p2YCkL9wN9GvF4Id9nureT">青 春 没 有 售 价</h1>
+    <div class="clock" data-page-node-id="af0Qy23unVSP11Si6NITXT"><span id="hdtime" data-page-node-id="oFZNmMd8ywwIDM8AKFqSmr">--:--:--</span><br data-page-node-id="zAyjvPYZJlRWIKVdejzvgP"><span id="hddate" data-page-node-id="AThQSy2znb1UFGo1DY75Lv">----/--/--</span></div>
+  </div>
+
+  <div class="ticker" data-page-node-id="W4VndCvLsBJljFvxFbEkse">
+    <span class="tag" id="tktag" data-page-node-id="D84AINMSzkECxw1Ek2ysDQ">下一站</span>
+    <div id="tkitems" style="flex:1;overflow:hidden" data-page-node-id="yTLFCRHnsPEBJNmdPQqzn7"><span data-page-node-id="TiqBy1DA7DJb1dFMxJdEXk">加载中…</span></div>
+  </div>
+
+  <div class="bar" data-page-node-id="U1EnZa99FHtAv81IUBP9gO">
+    <select id="selAct" class="btn" style="height:38px;padding:0 10px;display:none" title="按活动查看"></select>
+    <select id="selTeam" class="btn" style="height:38px;padding:0 10px"></select>
+    <button class="btn act" id="btnPlay" data-page-node-id="WrInFNWBUD6vl5Tk44vjA6">自动巡演</button>
+    <button class="btn" id="btnPrev" data-page-node-id="hAxLdHljHiXnDvC3QaWfzr">上一程</button>
+    <button class="btn" id="btnNext" data-page-node-id="GbXksuA31TBlTEKUQloINE">下一程</button>
+    <button class="btn lit" id="btnAll" data-page-node-id="kmVI2MPH558NWQlhbST9kD">🌟 全部点亮</button>
+    <button class="btn" id="btnReset" data-page-node-id="GDRpsbyhTA2JAENxhprnkG">重置视角</button>
+    <a class="btn" id="btnDetail" href="/detail" style="text-decoration:none" data-page-node-id="sNcoSkbnbxHUGys0SAR1BJ">行程明细</a>
+    <a class="btn" id="btnAdmin" href="/admin" style="text-decoration:none" data-page-node-id="GXbfravCQgOj9iURiaTaTr">数据维护</a>
+    <a class="btn" id="btnAI" href="/ai" style="text-decoration:none" data-page-node-id="ENoAJhBvh3NiCwKw37QOxc">AI 规划</a>
+    <span class="demo-pill" id="btnLogin" style="display:none">👀 演示模式 · 登录查看真实数据</span>
+    <div class="acct" id="acct" style="display:none">
+      <span class="av" id="acctAv">👤</span>
+      <span class="nm" id="acctNm">—</span>
+      <span class="ar">▾</span>
+      <span class="gear" id="btnSettings" title="显示设置">⚙</span>
+      <div class="acct-menu" id="acctMenu">
+        <div class="hd2" id="acctSub">未登录</div>
+        <a href="/profile">👤 个人信息</a>
+        <a href="/admin" id="acctAdmin" style="display:none">🗂 数据维护</a>
+        <a href="/ai">✨ AI 规划</a>
+        <div class="sep"></div>
+        <span class="it out" id="btnLogout">🚪 退出登录</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mapbar" data-page-node-id="mapbar">
+    <button class="btn" id="btnMap3d" title="3D / 2D 地图切换（3D 需 WebGL）">🧊 3D</button>
+    <button class="btn" id="btnRoutes" title="叠加显示全部已出行程路线">🛤 全部路线</button>
+    <button class="btn" id="btnMapSettings" title="自动巡演间隔 / 显示设置">⚙ 地图设置</button>
+    <button class="btn" id="legendToggle" title="收起/展开路线图例">☰ 图例</button>
+  </div>
+
+  <div class="grid" data-page-node-id="6QUAXIT5JdfdzpEVFlUI4m">
+    <div class="col" data-page-node-id="4GFFZHVFywMpSTTqJatg5M">
+      <div class="card mapcard" data-page-node-id="Ql0AKCB1RlddPjmlzYxI9r">
+        <div class="alllit-banner" id="allbanner" data-page-node-id="IEFW4cdB9lonFQbg8BI843">🎉 全国 <span id="allcnt" data-page-node-id="9xGGGu1YUljBUPHmgCX6Cz">0</span> 城，全部点亮！</div>
+        <div class="mnow" id="mnow" data-page-node-id="JBZcehi0CifQPOJk9ez2U9"></div>
+        <svg id="mapsvg" xmlns="http://www.w3.org/2000/svg" data-page-node-id="rRI1GQ3UmQTH0VAemcDpLM"></svg>
+        <div id="map3d"></div>
+        <div id="nsisvg" data-page-node-id="mDw1f4V6XiKbqJ8M8TkYJe"></div>
+        <div class="route-legend" id="routeLegend" data-page-node-id="3cozhsjQs1aoYEKKKkBumx"></div>
+        <div id="tip" data-page-node-id="088jGFPjWqPutwr6dX9Lbo"></div>
+      </div>
+      <div class="subrow">
+        <div class="card sub2" data-page-node-id="IAVHIYUYODfoAotwHDtriC">
+          <h3 data-page-node-id="aBUNRLBVQwj6Qe1o0Dy1tm">消费结构</h3>
+          <div class="donut-wrap" data-page-node-id="iXbWzhIt80YQQ6zd6khbuv">
+            <svg id="donut" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg" data-page-node-id="skSMFyvUXDdoqbeUoOINf2"></svg>
+            <div class="rg" id="dlegend" data-page-node-id="sHZUZShGZ8qhmNCfhSKGq3"></div>
+          </div>
+        </div>
+        <div class="card sub2">
+          <h3>年度足迹</h3>
+          <div class="ybars" id="ybars" data-page-node-id="HMnwJzba9TW8CN9Abb17pf"></div>
+          <div id="ynote" style="font-size:11px;color:var(--tx3);margin-top:6px" data-page-node-id="tNwskeGTjfwp8cP4u1hrsP"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col" data-page-node-id="HgJBxSD3t2lugCfTVwAfIh">
+      <div class="card" data-page-node-id="RsCcXqLicVjznRX1GgPX5x">
+        <h3 data-page-node-id="RqQTwPX0NDQMLL8NqcFnv4">核心数据</h3>
+        <div class="kpis" id="kpi" data-page-node-id="lYvnxoMYoG9R4uLGnA1HjA"></div>
+      </div>
+      <div class="card" data-page-node-id="dftGFiLog4gb9nifdb1wD0">
+        <h3 data-page-node-id="XLPuMT1XDu9bMLFjbgLqLO">花费排行 · Top 10</h3>
+        <div id="rktop" data-page-node-id="BVl1ZnbvQKU3CwiYj9m9yo"></div>
+      </div>
+      <div class="card" data-page-node-id="HqvYmmcw0OAHs3ZoUAbfjL">
+        <h3 data-page-node-id="1H8DVotuaBUXwtv4pG162r">旅伴出勤 · Top 6</h3>
+        <div id="rkpeople" data-page-node-id="ofw9PTXunD1YDpNiUb1twm"></div>
+      </div>
+      <div class="card" data-page-node-id="AGoTt7eY1PJXf6oF6E0jnB">
+        <h3 data-page-node-id="F4AR2ODjoFjJO1h25GFt5F">大额流水</h3>
+        <ul id="flowul" data-page-node-id="z8jwse5DGj5C6U8HHBf7bN"></ul>
+      </div>
+    </div>
+  </div>
+  <div id="narrow" data-page-node-id="qasnjNY27x4aFSHBSJXZZX">手机端建议横屏查看大屏；维护数据与 AI 规划请点上方按钮。</div>
+</div>
+
+<div id="setModal"><div id="setCard">
+  <span class="x" id="setX">×</span>
+  <h3>⚙ 显示设置</h3>
+  <div class="fld"><label>自动巡演切换间隔（秒）</label><input type="number" id="setTourSec" min="2" max="120" step="1"></div>
+  <div class="fld"><label>主题配色</label><select id="setTheme" style="width:100%;height:38px;border-radius:9px;border:1px solid var(--line);background:rgba(11,10,31,.6);color:var(--tx);padding:0 10px;font-size:14px;outline:none"><option value="aurora">极光蓝绿</option><option value="sunset">暖阳橙金</option><option value="neon">霓虹紫粉</option></select></div>
+  <div class="rbar"><button class="btn" id="setCancel" style="height:34px;padding:0 14px">取消</button><button class="btn lit" id="setOk" style="height:34px;padding:0 14px;border:0">保存</button></div>
+</div></div>
+
+<div id="mask" data-page-node-id="XWxPExblDXSCzc2BzlPmgG"></div>
+
+<!-- 城市照片墙（payload.photos 存在时启用） -->
+<div id="pwMask">
+  <div class="pw-head">
+    <span class="t" id="pwTitle">城市照片</span>
+    <span class="n" id="pwCnt"></span>
+    <span class="x" id="pwClose">✕ 关闭</span>
+  </div>
+  <div class="pw-grid" id="pwGrid"></div>
+</div>
+
+<div id="drawer" data-page-node-id="JsnYpius1GQRjjziV8J83q">
+  <span class="x" id="dclose" data-page-node-id="tFObBrinkH1k5PUhYXEVy8">×</span>
+  <h2 id="dtitle" data-page-node-id="JLegvEi6g7KB5bJGjeWlLr"></h2>
+  <div id="dmeta" data-page-node-id="mAHymJB0xCZpBKVPiAL6M8"></div>
+  <div id="dbody" data-page-node-id="MdcTcugWmn84JGnJFCux0E"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var D=null, TRIPS=[], PEOPLE=[], LIT={}, ST={}, GEO=null, NEXT=[];
+var CAT_KEY={'行':'go','门票':'ticket','吃':'eat','住':'stay','其他':'other'};
+var CATC={};
+function rebuildCat(){var s=getComputedStyle(document.documentElement);for(var k in CAT_KEY){if(CAT_KEY.hasOwnProperty(k)){CATC[k]=s.getPropertyValue('--cat-'+CAT_KEY[k]).trim()||'#888';}}}
+rebuildCat();
+window.addEventListener('themechange',rebuildCat);
+var HEAT=[[1,'#3a2e6e'],[2,'#6a3fa0'],[4,'#9b6bff'],[7,'#ff5fa2'],[999,'#ffb14e']];
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function shortC(full){return String(full||'').replace(/市$/,'').replace(/地区$/,'').replace(/自治州$/,'').replace(/盟$/,'').replace(/特别行政区$/,'').trim();}
+// 已点亮/到访城市简称列表（供画地名用）
+function litCityNames(){var arr=[],seen={},k,st;
+  for(k in LIT){if(!LIT.hasOwnProperty(k))continue;st=LIT[k];if(!st)continue;var s=shortC(st.n);if(!s||seen[s])continue;seen[s]=1;arr.push(s);}
+  return arr;}
+function money(n){n=Number(n)||0;return '¥'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function money0(n){n=Math.round(Number(n)||0);return '¥'+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function heatColor(v){for(var i=0;i<HEAT.length;i++){if(v<=HEAT[i][0])return HEAT[i][1];}return HEAT[HEAT.length-1][1];}
+function brightColor(v){var p=Math.min(1,(v-1)/8);var cols=['#46e6ff','#7c8bff','#9b6bff','#c66bff','#ff5fa2','#ff8a4e'];return cols[Math.min(cols.length-1,Math.floor(p*cols.length))];}
+// 全部路线：颜色区分 + 交通方式图标（按相邻城市大圆距离估算）
+function routeColor(i){var hue=(i*137.508)%360;return 'hsl('+hue.toFixed(0)+',78%,64%)';}
+function havDist(a,b){var R=6371,toR=Math.PI/180;var dLat=(b[1]-a[1])*toR,dLng=(b[0]-a[0])*toR;var la1=a[1]*toR,la2=b[1]*toR;var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)*Math.sin(dLng/2);return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));}
+function legMode(km){return km>1200?'plane':(km>300?'train':'car');}
+var MODE_GLYPH={
+  plane:'M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z',
+  train:'M12 2C8 2 4 4 4 9v7a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-1h6v1a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2V9c0-5-4-7-8-7zm-5 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm10 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z',
+  car:'M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 16a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 11l1.5-4.5h11L19 11H5z'
+};
+
+var S={sel:null,idx:-1,play:true,hoverCity:null,drawer:false,allLit:false,allRoutes:true,lgOpen:false,isMock:false,perms:[],tourSec:7,labelsN:0};
+var AVATARS=['🐰','🦊','🐼','🐯','🦁','🐨','🐸','🦄','🐳','🦉','🐝','🦋','🌵','🍑','🚗','✈️','⛰️','🌊','🔥','⭐'];
+function personTag(p){ // p 对象含 avatar/codename/name，返回带头像的展示HTML
+  var av=p.avatar||''; var nm=p.codename||p.name||'';
+  var r=''; if(av)r+='<span class="pav" style="display:inline-block;width:1.15em;text-align:center;font-size:1.05em">'+esc(av)+'</span>';
+  return r+'<span>'+esc(nm)+'</span>';
+}
+function personName(p){return p&&(p.codename||p.name)?(p.codename||p.name):'';}
+var SEQ=[];
+var PJ={minx:0,maxx:1,miny:0,maxy:1,W:1000,H:820};
+function mercX(lng){return lng*Math.PI/180;}
+function mercY(lat){return -Math.log(Math.tan((90+lat)*Math.PI/360));}
+function initProj(){
+  var xs=[],ys=[],i,j,r;
+  for(i=0;i<GEO.provinces.length;i++)for(j=0;j<GEO.provinces[i].p.length;j++){r=GEO.provinces[i].p[j];
+    for(var k=0;k<r.length;k++){xs.push(mercX(r[k][0]));ys.push(mercY(r[k][1]));}}
+  PJ.minx=Math.min.apply(null,xs);PJ.maxx=Math.max.apply(null,xs);PJ.miny=Math.min.apply(null,ys);PJ.maxy=Math.max.apply(null,ys);
+  var ratio=(PJ.maxy-PJ.miny)/(PJ.maxx-PJ.minx);PJ.W=1000;PJ.H=Math.round(1000*ratio);
+}
+function PX(lng){return (mercX(lng)-PJ.minx)/(PJ.maxx-PJ.minx)*PJ.W;}
+function PY(lat){return (mercY(lat)-PJ.miny)/(PJ.maxy-PJ.miny)*PJ.H;}
+function ringPath(r){var d='',i;for(i=0;i<r.length;i++)d+=(i?'L':'M')+PX(r[i][0]).toFixed(1)+' '+PY(r[i][1]).toFixed(1);return d+'Z';}
+function polyPath(polys){var d='',i;for(i=0;i<polys.length;i++)d+=ringPath(polys[i]);return d;}
+
+// 在图上指定城市简称处画名称标签（自动去重 + 粗网格抽稀防文字重叠）
+var _lblCell=null;
+function _lblHash(px,py){return Math.round(px/26)+'_'+Math.round(py/18);}
+function clearLabels(){var g=$('g-lbl');if(g)g.innerHTML='';_lblCell={};}
+function drawCityLabels(names,fs,maxN){
+  fs=fs||9;maxN=maxN||300;
+  var g=$('g-lbl');if(!g)return;
+  _lblCell={};
+  var i,h='',drawn=0,seen2={};
+  for(i=0;i<names.length&&drawn<maxN;i++){
+    var nm=names[i];if(!nm||seen2[nm])continue;seen2[nm]=1;
+    var xy=D.citiesXY[nm];if(!xy)continue;
+    var px=PX(xy[1]),py=PY(xy[0]);var key=_lblHash(px,py);
+    if(_lblCell[key])continue;_lblCell[key]=1;
+    h+='<text x="'+(px+5).toFixed(1)+'" y="'+(py+4).toFixed(1)+'" font-size="'+fs+'" fill="#f3ecff" opacity=".92" style="paint-order:stroke" stroke="#0b0a1f" stroke-width="2.4" stroke-linejoin="round">'+esc(nm)+'</text>';
+    drawn++;
+  }
+  g.innerHTML=h;S.labelsN=drawn;
+}
+
+var CITY_AD={},CITY_EL={};
+function buildBase(){
+  var i,g=$('mapsvg'),h='';
+  g.setAttribute('viewBox','0 0 '+PJ.W+' '+PJ.H);
+  h+='<g id="g-prov">';
+  for(i=0;i<GEO.provinces.length;i++)h+='<path class="prov" d="'+polyPath(GEO.provinces[i].p)+'"/>';
+  h+='</g><g id="g-city">';
+  for(i=0;i<GEO.cities.length;i++){var c=GEO.cities[i],st=LIT[c.a];if(!st)continue;CITY_AD[c.a]=c;
+    h+='<path class="cityp" data-a="'+c.a+'" data-n="'+esc(c.n)+'" fill="'+heatColor(st.v)+'" fill-opacity="0.85" d="'+polyPath(c.p)+'"/>';}
+  h+='</g><g id="g-route"></g><g id="g-pt"></g><g id="g-lbl"></g>';
+  g.innerHTML=h;
+  var els=g.querySelectorAll('path.cityp');
+  for(i=0;i<els.length;i++)CITY_EL[els[i].getAttribute('data-a')]=els[i];
+  // 南海诸岛
+  var ns=$('nsisvg'),iw=88,ih=128,pad=5;
+  var B0=mercX(105.5),B1=mercX(124.5),BT=mercY(24.5),BB=mercY(2.6);
+  function nx(lng){return pad+(mercX(lng)-B0)/(B1-B0)*(iw-2*pad);}
+  function ny(lat){return pad+(mercY(lat)-BT)/(BB-BT)*(ih-2*pad);}
+  var s='<svg viewBox="0 0 '+iw+' '+ih+'" xmlns="http://www.w3.org/2000/svg">';
+  for(i=0;i<GEO.provinces.length;i++){var pf=GEO.provinces[i],dd='';
+    for(var j=0;j<pf.p.length;j++){var rr=pf.p[j],d2='';for(var k=0;k<rr.length;k++)d2+=(k?'L':'M')+nx(rr[k][0]).toFixed(1)+' '+ny(rr[k][1]).toFixed(1);dd+=d2+'Z';}
+    s+='<path d="'+dd+'" fill="#2a2150" stroke="#4a3a82" stroke-width=".4"/>';}
+  if(GEO.jd&&GEO.jd.length){var jd='',jf=GEO.jd[0];for(var m=0;m<jf.p.length;m++){var jr=jf.p[m];for(var q=0;q<jr.length;q++)jd+=(q?'L':'M')+nx(jr[q][0]).toFixed(1)+' '+ny(jr[q][1]).toFixed(1);jd+='Z';}
+    s+='<path d="'+jd+'" fill="#ff8a4e" stroke="#ffd08a" stroke-width=".4"/>';}
+  s+='</svg>';ns.innerHTML=s;
+}
+
+function renderTicker(){
+  var items=[],i,future=[],overdue=[];
+  for(i=0;i<NEXT.length;i++){if(NEXT[i].days==null)continue;if(NEXT[i].days>=0)future.push(NEXT[i]);else overdue.push(NEXT[i]);}
+  future.sort(function(a,b){return a.days-b.days;});overdue.sort(function(a,b){return a.days-b.days;});
+  if(future.length){var f=future[0];items.push('<span><b>'+esc(f.title)+'</b> · '+esc(f.date)+' 出发，还有 <span class="hot">'+(f.days<0?0:f.days)+' 天</span>'+(f.cities&&f.cities.length?'（'+esc(f.cities.join('·'))+'）':'')+'</span>');}
+  for(i=0;i<overdue.length&&i<2;i++){items.push('<span><b>'+esc(overdue[i].title)+'</b> 计划 '+esc(overdue[i].date)+' · <span class="red">已过 '+Math.abs(overdue[i].days)+' 天，账还没记</span></span>');}
+  if(!items.length)items.push('<span>暂无待办行程</span>');
+  items.push('<span style="color:#7d6aa8">共 '+ST.trips+' 程 · '+ST.cities+' 市 · '+money0(ST.total)+'</span>');
+  $('tkitems').innerHTML=items.join('')+items.join('');
+  $('tktag').className='tag'+(overdue.length?' red':'');
+  $('tktag').textContent=overdue.length?'待归档':'下一站';
+  $('hdspan');
+}
+function renderKpi(){
+  var k=[['出行次数',ST.trips,'次',0],['点亮城市',ST.cities,'市',0],['累计花费',money0(ST.total),'',1],['单程均价',money0(ST.avg),'',1]];
+  var h='';for(var i=0;i<k.length;i++)h+='<div class="kpi'+(k[i][3]?' o':'')+'"><div class="lb">'+k[i][0]+'</div><div class="v num">'+k[i][1]+(k[i][2]?'<small> '+k[i][2]+'</small>':'')+'</div></div>';
+  $('kpi').innerHTML=h;
+}
+function renderDonut(){
+  var keys=Object.keys(ST.cats),tot=0,i;for(i=0;i<keys.length;i++)tot+=ST.cats[keys[i]];
+  keys.sort(function(a,b){return ST.cats[b]-ST.cats[a];});
+  var R=58,r0=36,cx=75,cy=75,ang=-Math.PI/2,h='';
+  for(i=0;i<keys.length;i++){var v=ST.cats[keys[i]],a2=ang+v/tot*Math.PI*2,big=(a2-ang)>Math.PI?1:0;
+    var x1=cx+R*Math.cos(ang),y1=cy+R*Math.sin(ang),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2),
+        x3=cx+r0*Math.cos(a2),y3=cy+r0*Math.sin(a2),x4=cx+r0*Math.cos(ang),y4=cy+r0*Math.sin(ang);
+    if(keys.length===1)h+='<circle cx="'+cx+'" cy="'+cy+'" r="'+((R+r0)/2)+'" fill="none" stroke="'+(CATC[keys[0]]||'#888')+'" stroke-width="'+(R-r0)+'"/>';
+    else h+='<path d="M'+x1.toFixed(2)+' '+y1.toFixed(2)+'A'+R+' '+R+' 0 '+big+' 1 '+x2.toFixed(2)+' '+y2.toFixed(2)+'L'+x3.toFixed(2)+' '+y3.toFixed(2)+'A'+r0+' '+r0+' 0 '+big+' 0 '+x4.toFixed(2)+' '+y4.toFixed(2)+'Z" fill="'+(CATC[keys[i]]||'#888')+'" fill-opacity=".9"/>';
+    ang=a2;}
+  h+='<text x="75" y="71" text-anchor="middle" font-size="11" fill="#7d6aa8">分类合计</text><text x="75" y="88" text-anchor="middle" font-size="15" font-weight="700" fill="#f3ecff">'+money0(tot)+'</text>';
+  $('donut').innerHTML=h;
+  var lg='';for(i=0;i<keys.length;i++)lg+='<div class="r0"><i style="background:'+(CATC[keys[i]]||'#888')+'"></i><span class="nm">'+esc(keys[i])+'</span><span class="vl num">'+money0(ST.cats[keys[i]])+'</span><span class="pc num">'+(ST.cats[keys[i]]/tot*100).toFixed(1)+'%</span></div>';
+  $('dlegend').innerHTML=lg;
+}
+function renderYear(){
+  var ys=ST.years,mx=0,i;for(i=0;i<ys.length;i++)if(ys[i].s>mx)mx=ys[i].s;
+  var h='';for(i=0;i<ys.length;i++){var cur=(i===ys.length-1),hh=Math.max(8,Math.round(ys[i].s/mx*96));
+    h+='<div class="y'+(cur?' cur':'')+'"><div class="amt num">'+money0(ys[i].s)+'</div><div class="bar" style="height:'+hh+'px"></div><div class="yr">'+ys[i].y+'</div><div class="cnt">'+ys[i].n+' 程</div></div>';}
+  $('ybars').innerHTML=h;
+  var b=ys[ys.length-1];$('ynote').textContent='历年合计 '+money0(ST.total)+'，'+b.y+' 年至今 '+b.n+' 程已花 '+money0(b.s);
+}
+function topTrips(){var t=TRIPS.filter(function(x){return x.status==='done'&&(x.total||0)>0;});t.sort(function(a,b){return b.total-a.total;});return t;}
+function renderTop(){var t=topTrips().slice(0,10),mx=t.length?t[0].total:1,h='';
+  for(var i=0;i<t.length;i++)h+='<div class="r'+(S.sel===t[i].id?' on':'')+'" data-t="'+t[i].id+'"><div class="l1"><span class="i">'+(i+1)+'</span><span class="nm">'+esc(t[i].title)+'</span><span class="vl num">'+money0(t[i].total)+'</span></div><div class="tr"><i style="width:'+(t[i].total/mx*100).toFixed(1)+'%"></i></div><div class="l2">'+esc(t[i].date)+' · '+(t[i].people&&t[i].people.length?t[i].people.slice(0,3).join('、')+(t[i].people.length>3?' 等':''):'独行')+' · '+t[i].cities.length+' 站</div></div>';
+  $('rktop').innerHTML=h;bindRank('rktop');}
+function renderPeople(){var p=PEOPLE.slice().sort(function(a,b){return b.trips-a.trips;}).slice(0,6),mx=p.length?p[0].trips:1,h='';
+  for(var i=0;i<p.length;i++)h+='<div class="r p"><div class="l1"><span class="i">'+(i+1)+'</span><span class="nm">'+esc(p[i].name)+'</span><span class="vl num">'+p[i].trips+' 次</span></div><div class="tr"><i style="width:'+(p[i].trips/mx*100).toFixed(1)+'%"></i></div><div class="l2">走过 '+(p[i].cities||[]).length+' 个地方 · 累计分摊 '+money0(p[i].spend)+'</div></div>';
+  $('rkpeople').innerHTML=h;}
+function buildFlow(){var arr=[],i,j;for(i=0;i<TRIPS.length;i++){var t=TRIPS[i];if(t.status!=='done')continue;for(j=0;j<t.items.length;j++){var it=t.items[j];if(!it||!it.amt)continue;arr.push({c:it.cat||'其他',n:it.name||'—',a:it.amt,t:t.title});}}if(!arr.length)return[];arr.sort(function(a,b){return b.a-a.a;});return arr.slice(0,40);}
+function renderFlow(){var arr=buildFlow();if(!arr.length){$('flowul').innerHTML='';return;}var h='';for(var i=0;i<arr.length;i++)h+='<li><span class="c">'+esc(arr[i].c)+'</span><span class="n">'+esc(arr[i].n)+' <span style="color:#7d6aa8">· '+esc(arr[i].t)+'</span></span><span class="a">'+money(arr[i].a)+'</span></li>';$('flowul').innerHTML=h+h;}
+
+function renderRoute(){
+  var t=null,i;for(i=0;i<TRIPS.length;i++)if(TRIPS[i].id===S.sel)t=TRIPS[i];
+  var g=$('g-route'),p=$('g-pt'),onRoute={};
+  if(t)for(i=0;i<(t.route||[]).length;i++)onRoute[t.route[i]]=1;
+  if(S.allLit){
+    for(var a in CITY_EL){if(!CITY_EL.hasOwnProperty(a))continue;var el=CITY_EL[a];el.classList.add('on');
+      var st=LIT[a];el.setAttribute('fill',brightColor(st?st.v:1));el.setAttribute('fill-opacity','0.95');}
+    g.innerHTML='';p.innerHTML='';
+    drawCityLabels(litCityNames(),8,500); // 已点亮城市全部标注名称
+    $('mnow').innerHTML='<div class="n1">🎉 全国足迹总览</div><div class="n2">点亮 <b style="color:#ff5fa2">'+ST.cities+'</b> 个地级行政区 · '+ST.places+' 个到访点位 · 累计 '+money0(ST.total)+'</div>';
+    return;
+  }
+  if(S.allRoutes){ renderAllRoutes(); return; }
+  for(var a2 in CITY_EL){if(!CITY_EL.hasOwnProperty(a2))continue;var el2=CITY_EL[a2];
+    if(onRoute[a2]){el2.classList.add('on');el2.setAttribute('fill','#ffd166');el2.setAttribute('fill-opacity','.96');}
+    else{el2.classList.remove('on');var st2=LIT[a2];el2.setAttribute('fill',st2?heatColor(st2.v):'#3a2e6e');el2.setAttribute('fill-opacity','0.85');}}
+  if(!t||!t.path||t.path.length<2){g.innerHTML='';p.innerHTML='';
+    drawCityLabels(litCityNames(),8,500); // 默认总览/选中行程无路线：标已点亮城市
+  }
+  else{var d='';for(var i2=0;i2<t.path.length;i2++)d+=(i2?'L':'M')+PX(t.path[i2][0]).toFixed(1)+' '+PY(t.path[i2][1]).toFixed(1);
+    g.innerHTML='<path d="'+d+'" fill="none" stroke="#ff5fa2" stroke-width="1.6" stroke-opacity=".9"/><path d="'+d+'" fill="none" stroke="#fff" stroke-width=".6" stroke-dasharray="4 4" stroke-opacity=".7"/>';
+    var dots='';for(i2=0;i2<t.path.length;i2++){dots+='<circle cx="'+PX(t.path[i2][0]).toFixed(1)+'" cy="'+PY(t.path[i2][1]).toFixed(1)+'" r="3" fill="#ffd166"/>';if(i2===0||i2===t.path.length-1)dots+='<circle cx="'+PX(t.path[i2][0]).toFixed(1)+'" cy="'+PY(t.path[i2][1]).toFixed(1)+'" r="5" fill="#ff5fa2" stroke="#fff" stroke-width="1"/>';}
+    p.innerHTML=dots;
+    // 单程：标注途经城市（去重）
+    var seen={},ns=(t.cities||[]).filter(function(x){if(seen[x])return false;seen[x]=1;return true;});
+    drawCityLabels(ns,9,60);
+  }
+  var box=$('mnow');
+  if(!t){box.innerHTML='<div class="n1">全国足迹总览</div><div class="n2">点亮 <b style="color:#ff5fa2">'+ST.cities+'</b> 个地级行政区 · '+ST.places+' 个到访点位 · 点击城市或右侧排名查看单程</div>';}
+  else{var who=(t.people&&t.people.length)?t.people.join('、'):'记录中未标注';box.innerHTML='<div class="n1">'+esc(t.title)+'</div><div class="n2">'+esc(t.date)+' · '+(t.status==='done'?money0(t.total)+' · 人均 '+money0(t.avg):'计划中')+' · 同行 '+esc(who)+'</div>';}
+}
+function renderAllRoutes(){
+  var g=$('g-route'),p=$('g-pt');
+  for(var a in CITY_EL){if(!CITY_EL.hasOwnProperty(a))continue;var el=CITY_EL[a];el.classList.remove('on');
+    var st=LIT[a];el.setAttribute('fill',st?heatColor(st.v):'#3a2e6e');el.setAttribute('fill-opacity','0.85');}
+  var done=TRIPS.filter(function(t){return t.status==='done'&&(t.path||[]).length>1;});
+  var hRoute='',hPt='';
+  var legend='<div class="lh" style="display:flex;justify-content:space-between;align-items:center;gap:6px"><span>全部路线 · '+done.length+' 程（颜色区分行程）</span><span class="lg-x">收起 ✕</span></div>';
+  for(var di=0;di<done.length;di++){
+    var t=done[di],color=routeColor(di),path=t.path,d='';
+    for(var k=0;k<path.length;k++)d+=(k?'L':'M')+PX(path[k][0]).toFixed(1)+' '+PY(path[k][1]).toFixed(1);
+    hRoute+='<path class="rtline" data-t="'+t.id+'" d="'+d+'" fill="none" stroke="'+color+'" stroke-width="1.3" stroke-opacity="0.72" stroke-linejoin="round"/>';
+    var a0=path[0],a1=path[path.length-1];
+    hPt+='<circle cx="'+PX(a0[0]).toFixed(1)+'" cy="'+PY(a0[1]).toFixed(1)+'" r="3" fill="'+color+'" stroke="#0b0a1f" stroke-width=".6"/>';
+    hPt+='<circle cx="'+PX(a1[0]).toFixed(1)+'" cy="'+PY(a1[1]).toFixed(1)+'" r="3.4" fill="'+color+'" stroke="#fff" stroke-width=".8"/>';
+    for(k=0;k<path.length-1;k++){
+      var pa=path[k],pb=path[k+1],mx=(PX(pa[0])+PX(pb[0]))/2,my=(PY(pa[1])+PY(pb[1]))/2,mode=legMode(havDist(pa,pb));
+      hPt+='<g transform="translate('+(mx-9).toFixed(1)+','+(my-9).toFixed(1)+') scale(0.75)" pointer-events="none"><path d="'+MODE_GLYPH[mode]+'" fill="'+color+'" stroke="#0b0a1f" stroke-width="1" stroke-linejoin="round"/></g>';
+    }
+    legend+='<div class="ri" data-t="'+t.id+'"><span class="sw" style="background:'+color+'"></span><span class="rt">'+esc(t.title)+'</span><span class="rn">'+esc(t.date||'')+'</span></div>';
+  }
+  g.innerHTML=hRoute;p.innerHTML=hPt;
+  legend+='<div class="lh" style="margin-top:8px">图例：飞机 &gt;1200km · 火车 300–1200km · 汽车 &lt;300km</div>';
+  var lg=$('routeLegend');lg.innerHTML=legend;bindRouteLegend();
+  lg.querySelector('.lg-x').onclick=function(){S.lgOpen=false;applyLegend();};
+  $('mnow').innerHTML='<div class="n1">全部行程路线</div><div class="n2">'+done.length+' 程同时点亮 · 颜色区分不同行程 · 图标为各段交通方式（按距离估算）</div>';
+  drawCityLabels(litCityNames(),8,500); // 全部路线：也标注所有到访/点亮城市名称
+}
+function bindRouteLegend(){var box=$('routeLegend');var els=box.querySelectorAll('.ri[data-t]');for(var i=0;i<els.length;i++)(function(el){el.onclick=function(){var id=el.getAttribute('data-t');for(var j=0;j<TRIPS.length;j++)if(TRIPS[j].id===id){S.sel=id;S.drawer=true;S.allRoutes=false;S.lgOpen=false;$('routeLegend').classList.remove('show');$('btnRoutes').classList.remove('act');$('btnRoutes').textContent='🛤 单程路线';applyLegend();refreshAll();break;}};})(els[i]);}
+function renderDrawer(){
+  var t=null,i;for(i=0;i<TRIPS.length;i++)if(TRIPS[i].id===S.sel)t=TRIPS[i];
+  if(!S.drawer||!t){$('drawer').classList.remove('open');$('mask').style.display='none';return;}
+  $('drawer').classList.add('open');$('mask').style.display='block';
+  $('dtitle').textContent=t.title;$('dmeta').textContent=t.date+' · '+(t.status==='done'?('已完成 · 合计 '+money(t.total)):'计划中');
+  var h='';h+='<div class="blk"><div class="bt">同行人员</div><div class="chips">';
+  if(t.people&&t.people.length){for(i=0;i<t.people.length;i++)h+='<span class="chip o">'+esc(t.people[i])+'</span>';}else h+='<span class="chip">未标注</span>';
+  if(t.n)h+='<span class="chip">共 '+t.n+' 人</span>';h+='</div></div>';
+  var names=(t.cities||[]).filter(function(x,i2,a){return a.indexOf(x)===i2;});
+  if(names.length){h+='<div class="blk"><div class="bt">路线</div><div class="route">'+names.map(function(x){return '<b>'+esc(x)+'</b>';}).join('<s>→</s>')+'</div></div>';}
+  var ks=Object.keys(t.cats||{}),tot=0;for(i=0;i<ks.length;i++)tot+=t.cats[ks[i]];
+  if(tot>0){ks.sort(function(a,b){return t.cats[b]-t.cats[a];});h+='<div class="blk"><div class="bt">消费结构 · '+money(tot)+'</div><div class="cbar">';for(i=0;i<ks.length;i++)h+='<i style="width:'+(t.cats[ks[i]]/tot*100).toFixed(2)+'%;background:'+(CATC[ks[i]]||'#888')+'"></i>';h+='</div><div class="cbl">';for(i=0;i<ks.length;i++)h+='<span><i style="background:'+(CATC[ks[i]]||'#888')+'"></i>'+esc(ks[i])+' '+money0(t.cats[ks[i]])+'（'+(t.cats[ks[i]]/tot*100).toFixed(1)+'%）</span>';h+='</div></div>';}
+  if(t.items&&t.items.length){h+='<div class="blk"><div class="bt">逐笔明细 · '+t.items.length+' 笔</div><table class="it"><thead><tr><th style="width:34%">项目</th><th style="width:16%">类别</th><th style="width:24%">备注</th><th style="width:26%;text-align:right">金额</th></tr></thead><tbody>';
+    for(i=0;i<t.items.length;i++){var it=t.items[i]||{};h+='<tr><td class="n">'+esc(it.name||'—')+'</td><td>'+esc(it.cat||'')+'</td><td>'+esc(it.note||'')+'</td><td class="a">'+money(it.amt)+'</td></tr>';}
+    h+='</tbody></table></div>';}
+  if(t.notes&&t.notes.length){h+='<div class="blk"><div class="bt">同行辣评</div>'+t.notes.map(function(x){return '<div style="font-size:12px;color:#b9a8e6;line-height:1.8">· '+esc(x)+'</div>';}).join('')+'</div>';}
+  $('dbody').innerHTML=h;$('dbody').scrollTop=0;
+}
+function refreshAll(){renderTicker();renderKpi();renderDonut();renderYear();renderTop();renderPeople();renderFlow();renderRoute();renderDrawer();if(GL.mode==='3d')update3dSelection();}
+
+function bindRank(id){var box=$(id),els=box.querySelectorAll('.r[data-t]'),i;for(i=0;i<els.length;i++)(function(el){el.onclick=function(){S.sel=el.getAttribute('data-t');S.drawer=true;S.play=false;S.allRoutes=false;S.lgOpen=false;$('btnRoutes').classList.remove('act');$('btnRoutes').textContent='🛤 单程路线';syncPlay();applyLegend();refreshAll();};})(els[i]);}
+function syncPlay(){$('btnPlay').className=S.play?'btn act':'btn';$('btnPlay').textContent=S.play?'自动巡演':'已暂停';}
+function step(dir){if(!SEQ.length)return;S.idx=(S.idx+dir+SEQ.length)%SEQ.length;S.sel=SEQ[S.idx].id;refreshAll();}
+function applyLegend(){var lg=$('routeLegend'),tg=$('legendToggle');if(!lg||!tg)return;
+  var is3=GL.mode==='3d';
+  if(S.allRoutes&&!is3){ tg.style.display='block'; }
+  else { tg.style.display='none'; }
+  if(S.allRoutes&&S.lgOpen&&!is3){ lg.classList.add('show'); }
+  else { lg.classList.remove('show'); }
+}
+function hideView(){S.sel=null;S.drawer=false;S.allLit=false;S.allRoutes=false;S.lgOpen=false;$('allbanner').style.display='none';$('btnAll').classList.remove('act');$('btnRoutes').classList.remove('act');$('btnRoutes').textContent='🛤 单程路线';applyLegend();refreshAll();}
+function resetView(){hideView();}
+function tickClock(){var d=new Date(),p=function(n){return n<10?'0'+n:''+n;};$('hdtime').textContent=p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());$('hddate').textContent=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function bindMap(){
+  var wrap=document.querySelector('.mapcard'),tip=$('tip');
+  wrap.addEventListener('mousemove',function(e){var el=e.target;if(!el||!el.getAttribute){tip.style.display='none';return;}
+    var a=el.getAttribute('data-a');if(!a){tip.style.display='none';return;}var st=LIT[a],c=CITY_AD[a];if(!st){tip.style.display='none';return;}
+    var names=st.t.map(function(id){for(var i=0;i<TRIPS.length;i++)if(TRIPS[i].id===id)return TRIPS[i].title;return '';}).filter(Boolean);
+    tip.innerHTML='<b>'+esc(st.n)+'</b>　到访 <b>'+st.v+'</b> 次<div class="m">分摊花费 '+money0(st.s)+'</div><div class="m">'+esc(names.slice(0,4).join('、'))+(names.length>4?' 等 '+names.length+' 程':'')+'</div>';
+    var r=wrap.getBoundingClientRect();var x=e.clientX-r.left+16,y=e.clientY-r.top+14;if(x>r.width-260)x=e.clientX-r.left-256;if(y>r.height-90)y=e.clientY-r.top-86;tip.style.left=x+'px';tip.style.top=y+'px';tip.style.display='block';});
+  wrap.addEventListener('mouseleave',function(){tip.style.display='none';});
+  wrap.addEventListener('click',function(e){var a=e.target&&e.target.getAttribute?e.target.getAttribute('data-a'):null;if(!a)return;var st=LIT[a];if(!st||!st.t.length)return;
+    var best=null;for(var i=0;i<st.t.length;i++)for(var j=0;j<TRIPS.length;j++){if(TRIPS[j].id===st.t[i]&&TRIPS[j].status==='done'){if(!best||(TRIPS[j].total||0)>(best.total||0))best=TRIPS[j];}}
+    if(!best)return;S.sel=best.id;S.drawer=true;S.play=false;S.allLit=false;S.allRoutes=false;S.lgOpen=false;$('allbanner').style.display='none';$('routeLegend').classList.remove('show');$('btnAll').classList.remove('act');$('btnRoutes').classList.remove('act');$('btnRoutes').textContent='🛤 单程路线';syncPlay();applyLegend();refreshAll();});
+}
+
+function toast2(m){var t=document.createElement('div');t.textContent=m;
+  t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(28,22,58,.92);border:1px solid rgba(255,120,200,.4);border-radius:10px;padding:10px 18px;font-size:13px;color:#f3ecff;z-index:60;opacity:0;transition:.25s';
+  document.body.appendChild(t);requestAnimationFrame(function(){t.style.opacity='1';});
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},1800);}
+
+function loadTeamsForSelect(remembered){
+  fetch('/api/teams').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}).then(function(list){
+    var sel=$('selTeam');
+    sel.innerHTML='';
+    // 需求8：不再提供「最新团队」伪选项，首项为用户默认团队（后端按用户归属排序）
+    (list||[]).forEach(function(t){var o=document.createElement('option');o.value=t.id;o.textContent=t.name+(t.isDefault?'（种子）':'')+(t.isMine?'（我的）':'');sel.appendChild(o);});
+    if(remembered&&sel.querySelector('option[value="'+remembered+'"]')){sel.value=remembered;}
+    else if(list&&list.length){sel.selectedIndex=0;}// 默认=后端默认团队，已随 init 加载，无需重复请求
+  });
+}
+
+function applyScreenData(d){
+  D=d;TRIPS=d.trips;PEOPLE=d.people;LIT=d.lit;ST=d.stat;GEO=d.geo;NEXT=d.nextup;
+  S.isMock=!!d.mock;
+  initProj();buildBase();
+  SEQ=TRIPS.filter(function(t){return t.status==='done'&&(t.path||[]).length>1;});if(!SEQ.length)SEQ=TRIPS.slice();
+  S.sel=null;S.drawer=false;S.allLit=false;S.allRoutes=true;S.lgOpen=false;
+  $('allbanner').style.display='none';$('routeLegend').classList.remove('show');
+  $('btnAll').classList.remove('act');$('btnRoutes').classList.add('act');$('btnRoutes').textContent='🛤 全部路线';
+  syncPlay();applyLegend();refreshAll();
+  sync3dAfterData(); // 3D 模式下按新数据重建光柱/照片索引
+}
+
+function switchTeam(teamId){
+  if(teamId===0||teamId==null){teamId=0;}
+  localStorage.setItem('screenTeamId',String(teamId));
+  fetch('/api/screen-data'+(teamId?'?teamId='+teamId:''))
+    .then(function(r){return r.json();})
+    .then(function(d){applyScreenData(d);})
+    .catch(function(e){toast2('切换失败：'+e);});
+}
+
+/* V3：按活动查看 */
+function loadActivitiesForSelect(remembered){
+  fetch('/api/trips').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}).then(function(list){
+    var sel=$('selAct');if(!sel)return;
+    sel.innerHTML='';
+    var o0=document.createElement('option');o0.value='0';o0.textContent='全部行程';sel.appendChild(o0);
+    (list||[]).forEach(function(a){
+      var o=document.createElement('option');o.value=a.id;
+      o.textContent=(a.name||a.title||('大行程'+a.id))+'（'+(a.closed?'已结束':'进行中')+' · '+(a.childCount||0)+'程）';
+      sel.appendChild(o);
+    });
+    sel.value=(remembered&&sel.querySelector('option[value="'+remembered+'"]'))?remembered:'0';
+  });
+}
+function switchActivity(actId){
+  actId=Number(actId)||0;
+  localStorage.setItem('screenActivityId',String(actId));
+  var q='';
+  if(actId){q='?parentId='+actId;}
+  else{var t=localStorage.getItem('screenTeamId');if(t&&t!=='0')q='?teamId='+t;}
+  fetch('/api/screen-data'+q)
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){
+      applyScreenData(d);
+      toast2(actId?('已切换活动：'+(d.scope&&d.scope.name||('活动'+actId))+' · '+ST.trips+' 程'):'已恢复全部行程视图');
+    })
+    .catch(function(e){toast2('切换失败：'+e);});
+}
+
+/* ---------- 账号胶囊 / 显示设置 / 退出 ---------- */
+var tourTimer=null;
+function startTourTimer(){
+  if(tourTimer)clearInterval(tourTimer);
+  S.tourSec=Math.max(2,parseInt(localStorage.getItem('screenTourSec'),10)||7);
+  tourTimer=setInterval(function(){if(S.play&&!S.allLit&&!S.allRoutes&&!S.drawer)step(1);},S.tourSec*1000);
+}
+function openSettings(){
+  $('setTourSec').value=S.tourSec;
+  $('setModal').style.display='flex';
+}
+function closeSettings(){$('setModal').style.display='none';}
+function toggleAcct(){var m=$('acctMenu');m.classList.toggle('open');}
+function setupChrome(me){
+  var acct=$('acct'),pill=$('btnLogin');
+  if(me){ // 已登录
+    acct.style.display='inline-flex';pill.style.display='none';
+    var av=me.avatar||'👤',nm=me.codename||me.displayName||me.username;
+    $('acctAv').textContent=av;$('acctNm').textContent=nm;
+    $('acctSub').textContent=(me.username||'')+(me.roles&&me.roles.length?' · '+me.roles.join('/'):'');
+    var has=function(p){return (me.permissions||[]).indexOf(p)>=0;};
+    $('acctAdmin').style.display=has('MANAGE_TRIP')?'flex':'none';
+    // 直接控制条按钮：保留 btnDetail/btnAI，btnAdmin 按权限
+    // V3：数据维护入口 = 全局 MANAGE_TRIP 或 在任一活动中有编辑者及以上身份
+    var canMaintain=has('MANAGE_TRIP')||!!me.canMaintain;
+    show2('btnAdmin',canMaintain);show2('btnAI',true);show2('btnDetail',true);show2('selTeam',true);show2('selAct',true);
+  } else { // 游客/演示
+    acct.style.display='none';pill.style.display='inline-flex';
+    show2('selTeam',false);show2('selAct',false);show2('btnDetail',false);show2('btnAdmin',false);show2('btnAI',false);
+  }
+}
+function show2(id,on){var el=$(id);if(el)el.style.display=on?'':'none';}
+
+function applyVisibility(){
+  // 改为统一读 /api/me 驱动账号胶囊与权限可见性
+  fetch('/api/me').then(function(r){return r.ok?r.json():null;}).then(function(me){
+    setupChrome(me);
+  }).catch(function(){setupChrome(null);});
+}
+function bindTop(){
+  function syncRouteBtn(){var br=$('btnRoutes');if(br){br.classList.toggle('act',S.allRoutes);br.textContent=S.allRoutes?'🛤 全部路线':'🛤 单程路线';}}
+  $('btnPlay').onclick=function(){S.play=!S.play;S.allLit=false;S.allRoutes=false;S.lgOpen=false;$('allbanner').style.display='none';$('btnAll').classList.remove('act');syncRouteBtn();syncPlay();applyLegend();refreshAll();};
+  $('btnPrev').onclick=function(){S.play=false;S.allLit=false;S.allRoutes=false;S.lgOpen=false;$('allbanner').style.display='none';$('btnAll').classList.remove('act');syncRouteBtn();syncPlay();applyLegend();step(-1);};
+  $('btnNext').onclick=function(){S.play=false;S.allLit=false;S.allRoutes=false;S.lgOpen=false;$('allbanner').style.display='none';$('btnAll').classList.remove('act');syncRouteBtn();syncPlay();applyLegend();step(1);};
+  $('btnAll').onclick=function(){S.allLit=!S.allLit;if(S.allLit){S.allRoutes=false;S.lgOpen=false;$('routeLegend').classList.remove('show');S.play=false;syncPlay();$('allbanner').style.display='block';$('allcnt').textContent=ST.cities;$('btnAll').classList.add('act');}else{$('allbanner').style.display='none';$('btnAll').classList.remove('act');}syncRouteBtn();applyLegend();refreshAll();};
+  $('btnRoutes').onclick=function(){S.allRoutes=!S.allRoutes;if(S.allRoutes){S.allLit=false;$('allbanner').style.display='none';$('btnAll').classList.remove('act');S.play=false;syncPlay();S.lgOpen=false;$('btnRoutes').classList.add('act');}else{S.lgOpen=false;$('btnRoutes').classList.remove('act');if(!S.sel){var _b=null;for(var _i=0;_i<TRIPS.length;_i++){var _t=TRIPS[_i];if(_t&&_t.status==='done'&&(_t.path||[]).length>1){if(!_b||(_t.total||0)>(_b.total||0))_b=_t;}}if(_b){S.sel=_b.id;S.drawer=true;}}}$('btnRoutes').textContent=S.allRoutes?'🛤 全部路线':'🛤 单程路线';applyLegend();refreshAll();};
+  $('btnReset').onclick=resetView;
+  $('legendToggle').onclick=function(){S.lgOpen=true;applyLegend();};
+  $('dclose').onclick=function(){S.drawer=false;$('drawer').classList.remove('open');$('mask').style.display='none';};
+  $('mask').onclick=function(){S.drawer=false;$('drawer').classList.remove('open');$('mask').style.display='none';};
+  // 账号胶囊 / 设置 / 退出
+  $('acct').onclick=function(e){e.stopPropagation();toggleAcct();};
+  $('btnSettings').onclick=function(e){e.stopPropagation();var m=$('acctMenu');if(m)m.classList.remove('open');openSettings();};
+  $('btnMapSettings').onclick=openSettings;
+  $('setX').onclick=closeSettings;$('setCancel').onclick=closeSettings;
+  $('setModal').onclick=function(e){if(e.target===$('setModal'))closeSettings();};
+  $('setOk').onclick=function(){
+    var v=Math.max(2,parseInt($('setTourSec').value,10)||7);
+    localStorage.setItem('screenTourSec',String(v));S.tourSec=v;
+    startTourTimer();closeSettings();toast2('自动巡演间隔已设为 '+v+' 秒');
+  };
+  $('btnLogout').onclick=function(){location.href='/logout';};
+  // 演示模式胶囊：游客点击跳转到登录页（修复“点击无反应”）
+  $('btnLogin').onclick=function(){location.href='/login';};
+  document.addEventListener('click',function(){var m=$('acctMenu');if(m&&m.classList.contains('open'))m.classList.remove('open');});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeSettings();S.drawer=false;refreshAll();}if(e.key==='ArrowRight'){S.play=false;S.allLit=false;S.allRoutes=false;S.lgOpen=false;$('btnAll').classList.remove('act');syncRouteBtn();syncPlay();applyLegend();step(1);}if(e.key==='ArrowLeft'){S.play=false;S.allLit=false;S.allRoutes=false;S.lgOpen=false;$('btnAll').classList.remove('act');syncRouteBtn();syncPlay();applyLegend();step(-1);}});
+  syncRouteBtn();
+}
+
+/* ==================== 3D 地图（ECharts GL）+ 城市照片墙 ==================== */
+// 地图边界数据：阿里云 DataV GeoAtlas 100000_full（含台湾及南海诸岛）
+// 降级策略：echarts / echarts-gl / china.json 任一加载失败、window.echarts 未定义、
+// 或 getContext('webgl') 不可用时，完整回退到上方原有 SVG 地图渲染（原逻辑零改动）。
+var GL={ready:false,loading:false,failed:false,mode:'2d',pending3d:false,chart:null,coords:null};
+var PHOTOS=null; // null=照片墙功能未启用；数组=payload.photos [{city,fileName,caption,url}]
+
+function webglOK(){
+  try{var c=document.createElement('canvas');
+    return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));
+  }catch(e){return false;}
+}
+function loadScript(src,cb){
+  var s=document.createElement('script');s.src=src;s.async=true;
+  s.onload=function(){cb(null);};
+  s.onerror=function(){cb(new Error('脚本加载失败：'+src));};
+  document.head.appendChild(s);
+}
+function loadLocalJSON(src,cb){
+  fetch(src).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(j){cb(null,j);}).catch(function(e){cb(e);});
+}
+function tripById(id){for(var i=0;i<TRIPS.length;i++)if(TRIPS[i].id===id)return TRIPS[i];return null;}
+function coordOf(nm){
+  if(!GL.coords||!nm)return null;
+  if(GL.coords[nm])return GL.coords[nm];
+  return GL.coords[nm+'市']||null;
+}
+/* --- vendor 资源按需动态加载（不阻塞首屏；就绪前保持 2D SVG）--- */
+function init3DOnce(){
+  if(GL.ready||GL.failed||GL.loading)return;
+  GL.loading=true;
+  loadChinaThenCoords(function(e3,cn){
+    if(e3||!cn||!cn.features||!cn.features.length){glFail('地图边界数据加载失败');return;}
+    loadLocalJSON('/vendor/city-coords.json',function(e4,cc){
+      if(e4)cc={}; // 坐标表缺失不致命：不画光柱，地图仍可用
+      GL.coords=cc||{};
+      try{echarts.registerMap('china',cn);GL.loading=false;GL.ready=true;}
+      catch(e5){glFail('地图注册失败');return;}
+      if(GL.pending3d){GL.pending3d=false;GL.mode='3d';localStorage.setItem('screenMapMode','3d');applyMapMode();}
+    });
+  });
+  function ensureEcharts(done){
+    if(typeof window.echarts!=='undefined')return done(null);
+    loadScript('/vendor/echarts.min.js',function(e){
+      if(e||typeof window.echarts==='undefined')return done(new Error('echarts 加载失败'));
+      loadScript('/vendor/echarts-gl.min.js',function(e2){
+        if(e2)return done(new Error('echarts-gl 加载失败'));
+        done(null);
+      });
+    });
+  }
+  function loadChinaThenCoords(done){
+    ensureEcharts(function(err){
+      if(err){glFail(err.message);return;}
+      loadLocalJSON('/vendor/china.json',function(e3,cn){done(e3,cn);});
+    });
+  }
+}
+function glFail(msg){
+  var wasPending=GL.pending3d;
+  GL.loading=false;GL.failed=true;GL.pending3d=false;
+  var b=$('btnMap3d');if(b)b.style.display='none'; // 3D 不可用即隐藏切换按钮
+  if(GL.mode==='3d'){GL.mode='2d';applyMapMode();}
+  if(wasPending||GL.mode==='3d')toast2(msg+'，已回退 2D 地图');
+}
+/* --- 2D / 3D 模式切换 --- */
+function applyMapMode(){
+  var is3=GL.mode==='3d';
+  syncMap3dSize();
+  $('mapsvg').style.display=is3?'none':'';
+  $('map3d').style.display=is3?'block':'none';
+  $('nsisvg').style.display=is3?'none':''; // 3D 全图已含南海诸岛，隐藏小窗口
+  // 3D 下也保留「全部路线」按钮，支持全部/单程切换
+  $('btnRoutes').style.display='';
+  // 切 3D 时不清掉 allRoutes 状态，保留用户已选的「全部/单程」模式
+  var mc=document.querySelector('.mapcard');
+  if(mc){mc.classList.toggle('mode-3d',is3);mc.classList.toggle('mode-2d',!is3);}
+  var b=$('btnMap3d');
+  if(b){b.textContent=is3?'🗺 2D':'🧊 3D';b.className=is3?'btn act':'btn';}
+  var br=$('btnRoutes');
+  if(br){br.classList.toggle('act',S.allRoutes);br.textContent=S.allRoutes?'🛤 全部路线':'🛤 单程路线';}
+  applyLegend();
+  if(is3)render3D();else dispose3D(); // 切 2D 时 dispose 即停止自动旋转
+}
+function setMapMode(m){
+  if(m==='3d'){
+    if(GL.failed||!webglOK()){toast2('当前环境不支持 3D 地图，已使用 2D');return;}
+    if(!GL.ready){GL.pending3d=true;init3DOnce();toast2('3D 地图资源加载中…');return;}
+    GL.mode='3d';
+  }else{GL.mode='2d';GL.pending3d=false;}
+  localStorage.setItem('screenMapMode',GL.mode);
+  applyMapMode();
+}
+function bootMapMode(){
+  var b=$('btnMap3d');if(!b)return;
+  b.onclick=function(){setMapMode(GL.mode==='3d'?'2d':'3d');};
+  // 默认 3D（WebGL 可用时）。注意：启动瞬间 GPU 适配器可能尚未就绪导致首次探测失败，
+  // 故探测失败时延迟 2 秒重试一次，仍不可用则停留在 2D（用户可稍后手动切换）。
+  if(localStorage.getItem('screenMapMode')!=='2d'){
+    if(webglOK())setMapMode('3d');
+    else setTimeout(function(){
+      if(GL.mode==='2d'&&!GL.failed&&localStorage.getItem('screenMapMode')!=='2d'&&webglOK())setMapMode('3d');
+    },2000);
+  }
+  window.addEventListener('resize',syncMap3dSize);
+}
+function syncMap3dSize(){
+  var box=$('map3d');if(!box)return;
+  var svg=$('mapsvg');
+  var w=svg.clientWidth||(svg.parentNode?svg.parentNode.clientWidth:0)||800;
+  var h=Math.round(w*PJ.H/Math.max(1,PJ.W)); // 沿用 SVG 视口比例，保证卡片不塌陷
+  h=Math.max(320,h);
+  box.style.height=h+'px';
+  var mc=box.closest?box.closest('.mapcard'):null;
+  if(mc)mc.style.minHeight=(h+16)+'px'; // +16 补偿 mapcard 上下 padding
+  if(GL.chart)GL.chart.resize();
+}
+/* --- 3D 渲染 --- */
+function render3D(){
+  if(!GL.ready||GL.mode!=='3d')return;
+  if(!webglOK()){glFail('WebGL 不可用');return;}
+  syncMap3dSize();
+  dispose3D();
+  try{GL.chart=echarts.init($('map3d'),null,{renderer:'canvas'});GL.chart.setOption(build3dOption());}
+  catch(e){dispose3D();glFail('3D 渲染失败');return;}
+  bind3dEvents();
+}
+function dispose3D(){if(GL.chart){try{GL.chart.dispose();}catch(e){}GL.chart=null;}}
+// 城市光柱数据：聚合每个城市分摊花费（LIT 由 screen-data 提供，v=到访次数 s=分摊花费）
+function cityPillars(){
+  var arr=[],seen={},a,st,nm,xy;
+  for(a in LIT){
+    if(!LIT.hasOwnProperty(a))continue;st=LIT[a];
+    if(!st||!st.n)continue;
+    nm=shortC(st.n);if(seen[nm])continue;
+    xy=coordOf(nm);if(!xy)continue; // 查不到坐标的城市：不画光柱、不报错
+    seen[nm]=1;
+    arr.push({name:nm,lng:xy[0],lat:xy[1],spend:Number(st.s)||0,visits:st.v||1});
+  }
+  return arr;
+}
+// 3D 路线数据：「全部路线」展示全部已完成行程；「单程路线」且选中某行程时只展示该行程（无选中则不画线）。
+// 给每个坐标加一个海拔 ALT，让飞线浮在地图地形之上，避免被 regionHeight 埋住而不明显。
+var ROUTE_ALT=6;
+function route3dData(){
+  var arr=[],di;
+  // 单程模式：只画选中的行程；未选中则不画（与 2D 行为一致）
+  var single=null;
+  if(!S.allRoutes){
+    if(S.sel){
+      for(var si=0;si<TRIPS.length;si++)if(TRIPS[si].id===S.sel){single=TRIPS[si];break;}
+      if(!single||!single.path||single.path.length<=1)single=null;
+    }
+    if(!single)return arr; // 单程模式且无有效选中：不画任何线
+  }
+  for(di=0;di<TRIPS.length;di++){
+    var tr=TRIPS[di];if(!tr)continue;
+    if(!single && tr.status!=='done')continue; // 全部模式下只取已完成
+    if(single && tr.id!==single.id)continue;  // 单程模式只取选中，不卡完成状态
+    if(!((tr.path||[]).length>1))continue;
+    var cc=[];
+    for(var i=0;i<tr.path.length;i++)cc.push([Number(tr.path[i][0])||0,Number(tr.path[i][1])||0,ROUTE_ALT]);
+    var sel=(tr.id===S.sel);
+    arr.push({coords:cc, lineStyle:{color:routeColor(di), width:sel?6:3.2, opacity:sel?1:0.82}});
+  }
+  return arr;
+}
+function build3dOption(){
+  var ps=cityPillars(),mx=0,i;
+  for(i=0;i<ps.length;i++)if(ps[i].spend>mx)mx=ps[i].spend;
+  function ratio(s){return mx>0?Math.sqrt(Math.max(0,s)/mx):0;}
+  function sz(s){return 6+ratio(s)*20;}          // 光柱大小 ∝ √金额
+  function col(s){return brightColor(Math.min(9,1+8*ratio(s)));}
+  var core=[],halo=[];
+  for(i=0;i<ps.length;i++){
+    var c=col(ps[i].spend),v=[ps[i].lng,ps[i].lat,ps[i].spend];
+    core.push({name:ps[i].name,visits:ps[i].visits,spend:ps[i].spend,value:v,
+      itemStyle:{color:c,opacity:.95},symbolSize:sz(ps[i].spend)});
+    halo.push({name:ps[i].name,value:v,itemStyle:{color:c,opacity:.16},symbolSize:sz(ps[i].spend)*2.6}); // 光晕层
+  }
+  var routes3d=route3dData();
+  var csst=getComputedStyle(document.documentElement),landColor=(csst.getPropertyValue('--land').trim()||'#241c4d'),landLineColor=(csst.getPropertyValue('--landline').trim()||'#5a48a8'),empColor=(csst.getPropertyValue('--purple').trim()||'#7a4fd0'),empLineColor=(csst.getPropertyValue('--line2').trim()||'#c9a8ff');
+  return {
+    backgroundColor:'transparent',
+    geo3D:{
+      map:'china',                     // 完整边界渲染：含台湾及南海诸岛，不做任何隐藏/裁剪
+      regionHeight:2.2,boxWidth:100,shading:'lambert',
+      itemStyle:{color:landColor,borderColor:landLineColor,borderWidth:1,opacity:1},
+      emphasis:{itemStyle:{color:empColor,borderColor:empLineColor,borderWidth:1.4},label:{show:false}},
+      label:{show:false},
+      light:{main:{intensity:1.15,shadow:true,alpha:42,beta:26},ambient:{intensity:.55}},
+      viewControl:{autoRotate:true,autoRotateSpeed:3,autoRotateAfterStill:2, // 缓慢自动旋转
+        distance:95,alpha:52,beta:4,rotateSensitivity:1,panSensitivity:1,zoomSensitivity:1,
+        damping:.82,animation:true,animationDurationUpdate:800},
+      postEffect:{enable:true,bloom:{enable:true,bloomIntensity:.18}},
+      groundPlane:{show:false}
+    },
+    series:[
+      {id:'halo',name:'halo',type:'scatter3D',coordinateSystem:'geo3D',data:halo,silent:true},
+      {id:'core',name:'core',type:'scatter3D',coordinateSystem:'geo3D',data:core,
+        label:{show:true,position:'top',formatter:function(p){return p.name;},
+          textStyle:{color:'#f3ecff',fontSize:11,backgroundColor:'rgba(11,10,31,.5)',padding:[2,5],borderRadius:3}}},
+      {id:'sellineGlow',name:'sellineGlow',type:'lines3D',coordinateSystem:'geo3D',data:routes3d,polyline:true,silent:true,
+        lineStyle:{width:8,color:'#9b6bff',opacity:.18},
+        effect:{show:false}},
+      {id:'selline',name:'selline',type:'lines3D',coordinateSystem:'geo3D',data:routes3d,polyline:true,silent:true,
+        lineStyle:{width:3.2,color:'#9b6bff',opacity:.85},
+        effect:{show:routes3d.length>0,period:3.5,trailWidth:4.5,trailLength:.5,trailColor:'#fff3b0',trailOpacity:.98}}
+    ]
+  };
+}
+function update3dSelection(){
+  if(!GL.chart)return;
+  // 重绘全部路线（route3dData 已按 S.sel 决定哪条加粗高亮），而非退回单条线
+  var routes3d=route3dData();
+  try{GL.chart.setOption({series:[
+    {id:'sellineGlow',data:routes3d},
+    {id:'selline',data:routes3d,effect:{show:routes3d.length>0}}
+  ]});}catch(e){}
+}
+function bind3dEvents(){
+  if(!GL.chart)return;
+  GL.chart.on('click',function(p){
+    if(!p)return;
+    if(p.seriesType==='scatter3D'&&p.data&&p.data.name){openPhotoWall(p.data.name,true);return;} // 光柱点击→照片墙
+    if(p.componentType==='geo3D'&&p.name)openPhotoWall(shortC(p.name),false); // 省份点击：有照片才弹
+  });
+}
+/* --- 城市照片墙 --- */
+function buildPhotoIndex(){
+  PHOTOS=(D&&Array.isArray(D.photos))?D.photos:null; // photos 字段缺失：整体静默不启用
+}
+function findPhotos(city){
+  var out=[],i,cShort=shortC(city);
+  if(!PHOTOS)return out;
+  for(i=0;i<PHOTOS.length;i++){
+    var p=PHOTOS[i];if(!p||!p.url)continue;
+    // 命中①：照片自身城市；命中②：所属行程到访城市（照片 city 为空时也能在地图点开）
+    var pc=String(p.city||'');
+    if(pc===city||shortC(pc)===cShort){out.push(p);continue;}
+    if(Array.isArray(p.cities)){for(var j=0;j<p.cities.length;j++){var cc=String(p.cities[j]||'');if(cc===city||shortC(cc)===cShort){out.push(p);break;}}}
+  }
+  return out;
+}
+function showWall(city,list){
+  $('pwTitle').textContent=city+' · 足迹照片';
+  $('pwCnt').textContent=list.length+' 张';
+  var h='';
+  for(var i=0;i<list.length;i++){
+    var p=list[i];
+    h+='<figure class="pw-item"><img loading="lazy" src="'+esc(p.url)+'" alt="'+esc(p.caption||city)+'" onerror="this.style.opacity=.12"/>'
+      +'<figcaption class="cap">'+(p.caption?esc(p.caption):'&nbsp;')+'</figcaption></figure>';
+  }
+  $('pwGrid').innerHTML=h;
+  $('pwMask').classList.add('open');
+}
+function openPhotoWall(city,fromPillar){
+  if(!PHOTOS)return;                    // 功能未启用：静默
+  var list=findPhotos(city);
+  if(!list.length){
+    if(fromPillar)toast2('「'+city+'」暂无照片'); // 光柱点击给提示；省份点击静默
+    return;
+  }
+  showWall(city,list);
+}
+function closePhotoWall(){$('pwMask').classList.remove('open');$('pwGrid').innerHTML='';}
+function bind3dChrome(){
+  $('pwClose').onclick=closePhotoWall;
+  $('pwMask').addEventListener('click',function(e){if(e.target===$('pwMask'))closePhotoWall();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closePhotoWall();});
+}
+function sync3dAfterData(){
+  buildPhotoIndex();
+  if(GL.mode==='3d'){if(GL.chart)render3D();else applyMapMode();}
+}
+// 调试/QA 句柄（不影响业务逻辑；供无头测试与排查用）
+window.__screen3d={GL:GL,openPhotoWall:openPhotoWall,closePhotoWall:closePhotoWall,
+  setMapMode:setMapMode,webglOK:webglOK,cityPillars:cityPillars,
+  setPhotos:function(a){PHOTOS=Array.isArray(a)?a:null;},getPhotos:function(){return PHOTOS;}};
+
+async function init(){
+  var remembered=localStorage.getItem('screenTeamId');
+  if(remembered&&remembered==='0')remembered=null;
+  var rememberedAct=localStorage.getItem('screenActivityId');
+  if(rememberedAct&&rememberedAct==='0')rememberedAct=null;
+  try{
+    var url='/api/screen-data'+(rememberedAct?'?parentId='+rememberedAct:(remembered?'?teamId='+remembered:''));
+    var resp=await fetch(url);
+    if(resp.status===401){location.href='/login';return;}
+    D=await resp.json();
+  }catch(e){document.body.innerHTML='<div style="padding:40px;color:#ff5fa2">数据加载失败：'+e+'</div>';return;}
+  TRIPS=D.trips;PEOPLE=D.people;LIT=D.lit;ST=D.stat;GEO=D.geo;NEXT=D.nextup;
+  S.isMock=!!D.mock;
+  initProj();buildBase();
+  SEQ=TRIPS.filter(function(t){return t.status==='done'&&(t.path||[]).length>1;});if(!SEQ.length)SEQ=TRIPS.slice();
+  bindTop();bindMap();syncPlay();refreshAll();tickClock();applyVisibility();startTourTimer();
+  buildPhotoIndex();bind3dChrome();bootMapMode(); // 3D 地图 + 照片墙初始化（WebGL 可用则默认 3D）
+  setInterval(tickClock,1000);
+  if(!S.isMock){
+    loadTeamsForSelect(remembered);
+    loadActivitiesForSelect(rememberedAct);
+  }
+  $('selTeam').onchange=function(){switchTeam(Number(this.value));};
+  $('selAct').onchange=function(){switchActivity(this.value);};
+  var st=$('setTheme'); if(st){ st.value=getTheme(); st.onchange=function(){ applyTheme(this.value); }; }
+  window.addEventListener('themechange',function(){ try{ refreshAll(); }catch(e){} });
+}
+init();
+})();
+</script>
+</body>
+</html>

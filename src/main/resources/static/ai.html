@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI 行程规划 · 青春没有售价</title>
+<style>
+:root{--bg:#0b0a1f;--bg2:#141233;--panel:rgba(36,28,71,.55);--panel2:rgba(28,22,58,.85);--line:rgba(168,120,255,.22);--line2:rgba(255,120,200,.4);
+  --tx:#f3ecff;--tx2:#b9a8e6;--tx3:#7d6aa8;--pink:#ff5fa2;--purple:#9b6bff;--cyan:#46e6ff;--orange:#ffb14e;--green:#5cf2a8;--yellow:#ffe066;
+  --land:#241c4d;--landline:#3a2e6e;
+  --g1:rgba(155,107,255,.25);--g2:rgba(255,95,162,.20);--g3:rgba(70,230,255,.14);
+  --cat-eat:#46e6ff;--cat-stay:#5cf2a8;--cat-go:#ff8a4e;--cat-ticket:#ffb14e;--cat-other:#9b6bff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--tx);min-height:100vh;
+  background:radial-gradient(1000px 700px at 12% -10%,var(--g1),transparent 55%),
+             radial-gradient(900px 600px at 92% 110%,var(--g2),transparent 55%),linear-gradient(160deg,var(--bg),var(--bg2));
+  background-attachment:fixed;padding:14px 18px 50px}
+a{color:var(--cyan);text-decoration:none}
+.hd{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.userchip{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)}
+.userchip .un{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.userchip a{color:var(--cyan);text-decoration:none;font-size:12px}
+.userchip a.out{color:#ff7a8a}
+.hd h1{font-size:clamp(18px,2.6vw,26px);font-weight:800;letter-spacing:.1em;background:linear-gradient(92deg,var(--cyan),var(--purple) 45%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(6px)}
+.card h3{font-size:14px;color:var(--tx2);letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3::before{content:"";width:8px;height:8px;border-radius:50%;background:linear-gradient(92deg,var(--cyan),var(--pink))}
+label{display:block;font-size:12px;color:var(--tx3);margin:10px 0 4px}
+input,textarea,select{width:100%;border-radius:10px;border:1px solid var(--line);background:rgba(11,10,31,.6);color:var(--tx);padding:9px 12px;font-size:14px;outline:none;font-family:inherit}
+input:focus,textarea:focus{border-color:var(--pink)}
+textarea{min-height:120px;resize:vertical}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.btn{width:100%;height:44px;border:0;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;color:#fff;margin-top:14px;
+  background:linear-gradient(92deg,var(--purple),var(--pink));transition:.15s}
+.btn:hover{box-shadow:0 0 20px rgba(255,95,162,.4)}
+.btn.g{background:linear-gradient(92deg,#2bbf7a,#5cf2a8);color:#04210f}
+.plan{line-height:1.9;font-size:14px}
+.plan h1,.plan h2,.plan h3{color:#fff;margin:14px 0 6px}
+.plan h2{font-size:18px;border-left:4px solid var(--pink);padding-left:10px}
+.plan h3{font-size:15px;color:var(--cyan)}
+.plan ul,.plan ol{margin:6px 0 6px 22px}.plan li{margin:3px 0}
+.plan strong{color:var(--orange)}
+.plan code{background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px}
+.plan p{margin:6px 0}
+.placeholder{color:var(--tx3);font-size:13px;line-height:1.8}
+.loading{color:var(--cyan);font-size:13px}
+@media(max-width:840px){.grid{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+  var THEMES={
+    aurora:{
+      '--bg':'#06121a','--bg2':'#0a1f2b',
+      '--panel':'rgba(16,40,52,.55)','--panel2':'rgba(10,30,42,.85)',
+      '--line':'rgba(80,200,210,.18)','--line2':'rgba(80,230,200,.40)',
+      '--tx':'#e8fbff','--tx2':'#9fd4d8','--tx3':'#5e8a90',
+      '--pink':'#7af0c8','--purple':'#5b8cff','--cyan':'#3fe0d0','--orange':'#ffb05a','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#10232e','--landline':'#1f4a52',
+      '--g1':'rgba(91,140,255,.25)','--g2':'rgba(63,224,208,.20)','--g3':'rgba(92,242,168,.14)',
+      '--cat-eat':'#3fe0d0','--cat-stay':'#5cf2a8','--cat-go':'#5b8cff','--cat-ticket':'#ffb05a','--cat-other':'#9a8cff'
+    },
+    sunset:{
+      '--bg':'#160d12','--bg2':'#241016',
+      '--panel':'rgba(54,30,36,.55)','--panel2':'rgba(40,22,28,.86)',
+      '--line':'rgba(255,170,120,.20)','--line2':'rgba(255,140,90,.40)',
+      '--tx':'#fff1e8','--tx2':'#e3b79c','--tx3':'#a87a64',
+      '--pink':'#ff6f91','--purple':'#ff9e5e','--cyan':'#ffd166','--orange':'#ffb05a','--green':'#7fd99a','--yellow':'#ffe08a',
+      '--land':'#2a161c','--landline':'#5a2e34',
+      '--g1':'rgba(255,140,80,.26)','--g2':'rgba(255,95,140,.20)','--g3':'rgba(255,200,120,.16)',
+      '--cat-eat':'#ffb05a','--cat-stay':'#7fd99a','--cat-go':'#ffd166','--cat-ticket':'#ff6f91','--cat-other':'#c98cff'
+    },
+    neon:{
+      '--bg':'#0b0a1f','--bg2':'#141233',
+      '--panel':'rgba(36,28,71,.55)','--panel2':'rgba(28,22,58,.85)',
+      '--line':'rgba(168,120,255,.22)','--line2':'rgba(255,120,200,.40)',
+      '--tx':'#f3ecff','--tx2':'#b9a8e6','--tx3':'#7d6aa8',
+      '--pink':'#ff5fa2','--purple':'#9b6bff','--cyan':'#46e6ff','--orange':'#ffb14e','--green':'#5cf2a8','--yellow':'#ffe066',
+      '--land':'#241c4d','--landline':'#3a2e6e',
+      '--g1':'rgba(155,107,255,.25)','--g2':'rgba(255,95,162,.20)','--g3':'rgba(70,230,255,.14)',
+      '--cat-eat':'#46e6ff','--cat-stay':'#5cf2a8','--cat-go':'#ff8a4e','--cat-ticket':'#ffb14e','--cat-other':'#9b6bff'
+    }
+  };
+  var KEY='screenTheme';
+  function applyTheme(n){var t=THEMES[n]||THEMES.aurora,r=document.documentElement;for(var k in t){if(t.hasOwnProperty(k))r.style.setProperty(k,t[k]);}try{localStorage.setItem(KEY,n);}catch(e){}try{window.dispatchEvent(new CustomEvent('themechange',{detail:{name:n}}));}catch(e){}}
+  function getTheme(){try{return localStorage.getItem(KEY)||'aurora';}catch(e){return 'aurora';}}
+  window.THEMES=THEMES;window.applyTheme=applyTheme;window.getTheme=getTheme;
+  applyTheme(getTheme());
+})();
+</script>
+</head>
+<body>
+<div class="hd"><a href="/">← 大屏</a><a href="/admin">数据维护</a><h1>AI 行程规划 · 出个主意</h1><select id="themeSel" style="height:34px;padding:0 10px;font-size:13px;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--tx)"><option value="aurora">极光蓝绿</option><option value="sunset">暖阳橙金</option><option value="neon">霓虹紫粉</option></select><span class="userchip" id="u"></span></div>
+<div class="grid">
+  <div class="card">
+    <h3>告诉我你的想法</h3>
+    <label>目的地 / 主题</label>
+    <input id="dest" placeholder="例如：云南 7 天，昆明-大理-丽江">
+    <div class="row">
+      <div><label>天数</label><input id="days" type="number" placeholder="7"></div>
+      <div><label>人数</label><input id="ppl" type="number" placeholder="2"></div>
+    </div>
+    <label>预算（人均，可选）</label>
+    <input id="budget" placeholder="例如 5000 元">
+    <label>偏好 / 备注</label>
+    <textarea id="pref" placeholder="例如：喜欢自然风光和本地小吃，讨厌赶路，想泡温泉"></textarea>
+    <label>已有素材（可选，自动附到提示词）</label>
+    <textarea id="ctx" placeholder="例如：之前去过成都、重庆，这次想换个方向"></textarea>
+    <button class="btn" id="gen">✨ 生成行程方案</button>
+    <button class="btn g" id="save" style="display:none">💾 保存为草稿行程</button>
+  </div>
+  <div class="card">
+    <h3>方案</h3>
+    <div id="out" class="plan"><div class="placeholder">填写左侧需求，点「生成行程方案」。<br>AI 会给出逐日行程、预算与避坑提示。<br>满意后可一键「保存为草稿行程」，到「数据维护」里补全明细。</div></div>
+  </div>
+</div>
+<script>
+fetch('/api/me').then(function(r){return r.ok?r.json():null;}).then(function(me){if(me)document.getElementById('u').innerHTML='<span class="un">'+(me.avatar||'👤')+' '+(me.codename||me.displayName||me.username)+'</span><a href="/profile">个人</a><a class="out" href="/logout">退出</a>';});
+(function(){var ts=document.getElementById('themeSel');if(ts){ts.value=getTheme();ts.onchange=function(){applyTheme(this.value);};}})();
+function $(id){return document.getElementById(id);}
+function buildReq(){
+  var s='';var d=$('dest').value.trim();if(d)s+='目的地/主题：'+d+'。';
+  var d2=$('days').value.trim();if(d2)s+='天数：'+d2+' 天。';
+  var p=$('ppl').value.trim();if(p)s+='人数：'+p+' 人。';
+  var b=$('budget').value.trim();if(b)s+='预算：人均 '+b+'。';
+  var pf=$('pref').value.trim();if(pf)s+='偏好：'+pf+'。';
+  if(!s.trim())s='帮我规划一个轻松舒服的国内短途旅行。';
+  return s;
+}
+function md(t){t=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  t=t.replace(/^### (.*)$/gm,'<h3>$1</h3>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^# (.*)$/gm,'<h1>$1</h1>');
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>');
+  t=t.replace(/^(\s*)([-*]) (.*)$/gm,function(m,sp,_ ,c){return sp+'• '+c;});
+  var lines=t.split('\n'),html='',inUl=false;
+  lines.forEach(function(l){if(/^• /.test(l)){if(!inUl){html+='<ul>';inUl=true;}html+='<li>'+l.replace(/^• /,'')+'</li>';}
+    else{if(inUl){html+='</ul>';inUl=false;}if(l.trim()==='')html+='<br>';else html+=l+'<br>';}});
+  if(inUl)html+='</ul>';return html;}
+$('gen').onclick=async function(){
+  $('out').innerHTML='<div class="loading">AI 思考中…（首次调用智谱 GLM，约 10-30 秒）</div>';
+  try{
+    var r=await fetch('/api/ai/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requirement:buildReq(),context:$('ctx').value.trim()})});
+    var j=await r.json();
+    if(j.ok){$('out').innerHTML=md(j.plan);$('save').style.display='block';window._plan=j.plan;}
+    else{$('out').innerHTML='<div class="placeholder">'+esc(j.error||'生成失败')+'</div>';}
+  }catch(e){$('out').innerHTML='<div class="placeholder">请求出错：'+e+'</div>';}
+};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+$('save').onclick=async function(){
+  var title=prompt('草稿行程标题：',($('dest').value.trim()||'AI 规划草稿'));
+  if(!title)return;
+  var cities=prompt('途径城市（、分隔，可留空）：','');
+  var date=prompt('日期文本（如 2026.10.1-10.7）：','');
+  var year=prompt('年份（如 2026）：',new Date().getFullYear());
+  var body={title:title,date:date,year:parseInt(year)||new Date().getFullYear(),status:'plan',
+    people:[],n:parseInt($('ppl').value)||0,cities:(cities||'').split(/[、,，]/).map(function(x){return x.trim();}).filter(Boolean),notes:[]};
+  var r=await fetch('/api/ai/save-draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  var j=await r.json();
+  alert('已保存为草稿行程（计划状态）。可在「数据维护」里补明细。');
+};
+</script>
+</body>
+</html>
