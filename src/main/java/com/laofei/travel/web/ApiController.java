@@ -14,9 +14,11 @@ import com.laofei.travel.service.AiPlanService;
 import com.laofei.travel.service.DataExportService;
 import com.laofei.travel.service.DataImportService;
 import com.laofei.travel.service.ScreenDataService;
+import com.laofei.travel.service.SettleService;
 import com.laofei.travel.service.TeamService;
 import com.laofei.travel.service.TripService;
 import com.laofei.travel.service.TripAccessService;
+import com.laofei.travel.util.JsonUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -52,13 +54,14 @@ public class ApiController {
     private final TripAccessService tripAccess;
     private final TripService tripSvc;
     private final TripMemberRepository memberRepo;
+    private final SettleService settleSvc;
     private final TransactionTemplate txTemplate;
 
     public ApiController(TripRepository tripRepo, TripItemRepository itemRepo, ScreenDataService screenSvc,
                          DataImportService importSvc, DataExportService exportSvc, AiPlanService aiSvc, TeamService teamSvc,
                          AppUserRepository userRepo, TeamRepository teamRepo,
                          ObjectMapper om, SecuritySupport sec, TripAccessService tripAccess,
-                         TripService tripSvc, TripMemberRepository memberRepo,
+                         TripService tripSvc, TripMemberRepository memberRepo, SettleService settleSvc,
                          PlatformTransactionManager txm) {
         this.tripRepo = tripRepo;
         this.itemRepo = itemRepo;
@@ -74,6 +77,7 @@ public class ApiController {
         this.tripAccess = tripAccess;
         this.tripSvc = tripSvc;
         this.memberRepo = memberRepo;
+        this.settleSvc = settleSvc;
         this.txTemplate = new TransactionTemplate(txm);
     }
 
@@ -319,79 +323,9 @@ public class ApiController {
     /** AA 分摊结算：每笔由付款人代付、按 participants 均摊（空则行程全体同行人员），返回每人净额与最小转账清单 */
     @GetMapping("/trips/{id}/settle")
     public Map<String, Object> settle(@PathVariable Long id) {
-        class Party { String name; BigDecimal bal; Party(String n, BigDecimal b) { name = n; bal = b; } }
-        Trip t = tripAccess.requireView(id, sec.principal());   // 读接口补鉴权，AA 账单含金额与付款人，严禁越权读取
-        List<String> people = parseJsonArray(t.getPeopleJson());
-        List<TripItem> items = itemRepo.findByTripId(id);
-        final BigDecimal ZERO = BigDecimal.ZERO;
-        Map<String, BigDecimal> paid = new LinkedHashMap<>();
-        Map<String, BigDecimal> share = new LinkedHashMap<>();
-        for (String p : people) { paid.put(p, ZERO); share.put(p, ZERO); }
-        BigDecimal total = ZERO;
-        for (TripItem it : items) {
-            BigDecimal amt = it.getAmt() == null ? ZERO : it.getAmt();
-            if (amt.compareTo(ZERO) <= 0) continue;
-            total = total.add(amt);
-            String payer = it.getPayer();
-            List<String> parts = parseJsonArray(it.getParticipantsJson());
-            if (parts.isEmpty()) parts = new ArrayList<>(people);
-            if (parts.isEmpty() && payer != null && !payer.isEmpty()) parts = new ArrayList<>(List.of(payer));
-            if (payer != null && !payer.isEmpty()) {
-                paid.putIfAbsent(payer, ZERO);
-                paid.put(payer, paid.get(payer).add(amt));
-            }
-            int k = parts.size();
-            if (k == 0) continue;
-            long cents = amt.setScale(2, RoundingMode.HALF_UP).movePointRight(2).longValue();
-            long base = cents / k;
-            long rem = cents % k;
-            for (int i = 0; i < k; i++) {
-                long c = base + (i < rem ? 1 : 0);
-                BigDecimal sh = new BigDecimal(c).movePointLeft(2);
-                String pp = parts.get(i);
-                share.putIfAbsent(pp, ZERO);
-                paid.putIfAbsent(pp, ZERO);
-                share.put(pp, share.get(pp).add(sh));
-            }
-        }
-        List<Map<String, Object>> peopleOut = new ArrayList<>();
-        List<Party> bal = new ArrayList<>();
-        for (String p : paid.keySet()) {
-            BigDecimal pai = paid.get(p);
-            BigDecimal sha = share.getOrDefault(p, ZERO);
-            BigDecimal b = pai.subtract(sha);
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("name", p);
-            m.put("paid", pai);
-            m.put("share", sha);
-            m.put("balance", b);
-            peopleOut.add(m);
-            if (b.signum() != 0) bal.add(new Party(p, b));
-        }
-        List<Party> creditors = bal.stream().filter(x -> x.bal.signum() > 0)
-                .sorted(Comparator.comparing((Party x) -> x.bal).reversed()).collect(Collectors.toList());
-        List<Party> debtors = bal.stream().filter(x -> x.bal.signum() < 0)
-                .sorted(Comparator.comparing((Party x) -> x.bal)).collect(Collectors.toList());
-        List<Map<String, Object>> transfers = new ArrayList<>();
-        int ci = 0, di = 0;
-        while (ci < creditors.size() && di < debtors.size()) {
-            Party c = creditors.get(ci), d = debtors.get(di);
-            BigDecimal amt = c.bal.min(d.bal.abs());
-            Map<String, Object> tr = new LinkedHashMap<>();
-            tr.put("from", d.name);
-            tr.put("to", c.name);
-            tr.put("amount", amt);
-            transfers.add(tr);
-            c.bal = c.bal.subtract(amt);
-            d.bal = d.bal.add(amt);
-            if (c.bal.signum() == 0) ci++;
-            if (d.bal.signum() == 0) di++;
-        }
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("people", peopleOut);
-        out.put("transfers", transfers);
-        out.put("total", total);
-        return out;
+        // 读接口补鉴权，AA 账单含金额与付款人，严禁越权读取（不可移除）
+        Trip t = tripAccess.requireView(id, sec.principal());
+        return settleSvc.calculateForTrip(t, itemRepo.findByTripId(id));
     }
 
     /* ---------------- 导入 / 导出 ---------------- */
@@ -531,13 +465,9 @@ public class ApiController {
         try { return Long.valueOf(s); } catch (Exception e) { return null; }
     }
 
+    /** JSON 数组解析：统一委托到 {@link JsonUtil}，与 AA 结算服务共用同一份实现 */
     private List<String> parseJsonArray(String s) {
-        if (s == null || s.isBlank()) return new ArrayList<>();
-        try {
-            List<String> r = new ArrayList<>();
-            for (var n : om.readTree(s)) r.add(n.asText());
-            return r;
-        } catch (Exception e) { return new ArrayList<>(); }
+        return JsonUtil.parseJsonArray(om, s);
     }
 
     private String toJson(Object o) {
