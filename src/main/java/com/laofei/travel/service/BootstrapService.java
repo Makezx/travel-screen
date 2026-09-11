@@ -24,6 +24,7 @@ import com.laofei.travel.service.TripService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -68,6 +69,13 @@ public class BootstrapService implements CommandLineRunner {
     /** 一次性迁移的标记名（版本位）。存在即跳过，杜绝每次重启改数据。 */
     private static final String MIGRATION_V3_ACTIVITY_MERGE = "v3-activity-merge";
 
+    /**
+     * 启动回填路线时，行程之间的停顿（毫秒）——礼貌节流，避免打爆外部路线 API 的 QPS。
+     * 见 app.route.backfill-delay-ms。想完全不限速就设 0。
+     */
+    @Value("${app.route.backfill-delay-ms:400}")
+    private long backfillDelayMs;
+
     @Override
     public void run(String... args) {
         Team team = ensureSeedTeam();
@@ -108,8 +116,12 @@ public class BootstrapService implements CommandLineRunner {
                     fail++;
                     System.out.println("[route-backfill] 行程#" + t.getId() + " 跳过: " + e.getMessage());
                 }
-                // 礼貌节流：高德 QPS 限流 ≤3/s，行程间再留 400ms 余量（段内另有 400ms 停顿）
-                try { Thread.sleep(400); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+                // 礼貌节流：外部路线 API 多有 QPS 限制（高德官方 ≤3/s），
+                // 行程间停顿见 app.route.backfill-delay-ms，设 0 可完全不限速。
+                if (backfillDelayMs > 0) {
+                    try { Thread.sleep(backfillDelayMs); }
+                    catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+                }
             }
             System.out.println("[route-backfill] 完成：烘焙=" + done + " 跳过=" + skip + " 失败=" + fail + " 共=" + all.size());
         } catch (Exception e) {

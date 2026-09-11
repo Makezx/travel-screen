@@ -23,14 +23,27 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 路线烘焙服务：把「城市中心对中心」的直线连接器，展开成沿真实道路的密集坐标。
  *
+ * <p><b>本类是项目里唯一调用「外部路线 API」的地方</b>。换厂商只需要改 {@code app.route.provider}
+ * 和对应 Key，业务代码一行都不用动。完整清单见仓库根目录 {@code EXTERNAL-APIS.md}。
+ *
  * <p>设计要点：
  * <ul>
  *   <li>烘焙与浏览分离——结果存进 {@link Trip#getPathJson()}，大屏渲染零联网、零 Key 也能跑；
- *       无 Key / 失败自动退回直线（现状）。</li>
- *   <li>三策略（{@code ROUTE_PROVIDER}）：{@code straight}(默认无 Key) / {@code osrm}(OSM 公共实例，无 Key) /
- *       {@code amap}(高德 WebService，需 {@code ROUTE_AMAP_KEY})。</li>
+ *       无 Key / 失败自动退回直线。</li>
+ *   <li>三策略（环境变量 {@code ROUTE_PROVIDER}，配置键 {@code app.route.provider}）：
+ *       <ul>
+ *         <li>{@code straight} — 默认，城市中心对中心直线，零依赖；</li>
+ *         <li>{@code osrm} — {@code https://router.project-osrm.org/route/v1/driving}，
+ *             OSM 公共实例，<b>免 Key</b>；</li>
+ *         <li>{@code amap} — {@code https://restapi.amap.com/v3/direction/driving}，
+ *             高德 WebService，需 {@code ROUTE_AMAP_KEY}（配置键 {@code app.route.amap-key}）。</li>
+ *       </ul></li>
  *   <li>坐标系统一为 GCJ-02：底图 china.json 与 city-coords.json 均为 GCJ-02。
  *       OSRM 返回 WGS-84，请求前把端点转 WGS-84、结果转回 GCJ-02，保证路线贴合城市点。</li>
+ *   <li><b>限流</b>：高德官方 ≤3 QPS —— 段间停顿 {@code app.route.amap-segment-delay-ms}（默认 400ms）、
+ *       单段重试 {@code app.route.amap-max-tries}（默认 5）线性退避；
+ *       启动回填时行程间再停顿 {@code app.route.backfill-delay-ms}（默认 400ms）。
+ *       OSRM 公共实例无公开配额，靠 {@code app.route.read-timeout-ms} 与回填节流兜底。</li>
  *   <li>内存缓存（按城市序列签名）避免重复调 API；首屏冷启动由 BootstrapService 后台回填。</li>
  * </ul>
  */
@@ -41,8 +54,30 @@ public class RouteService {
 
     private final String provider;
     private final String amapKey;
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+    /** 在 {@link #init()} 里按超时配置构建（构造期 @Value 尚未注入） */
+    private HttpClient http;
     private final ObjectMapper om = new ObjectMapper();
+
+    /* =========================================================================
+     * 外部 API 可调参数 —— 全部可用环境变量覆盖，见 application.yml 的 app.route 段
+     * 想换路线服务商 / 调限流，只改这里对应的配置，不必改业务代码。
+     * ========================================================================= */
+
+    /** HTTP 连接超时（毫秒） */
+    @Value("${app.route.connect-timeout-ms:3000}")
+    private int connectTimeoutMs;
+    /** HTTP 读取超时（毫秒） */
+    @Value("${app.route.read-timeout-ms:5000}")
+    private int readTimeoutMs;
+    /** 高德：每段请求后的停顿（毫秒）。官方限流 ≤3 QPS，400ms≈2.5 QPS 留余量 */
+    @Value("${app.route.amap-segment-delay-ms:400}")
+    private long amapSegmentDelayMs;
+    /** 高德：单段最大尝试次数（含首次）。临时错误按 400ms×n 线性退避后重试 */
+    @Value("${app.route.amap-max-tries:5}")
+    private int amapMaxTries;
+    /** Douglas-Peucker 抽稀容差（度）。约 0.006°≈700m：越大保留点越少、线越粗 */
+    @Value("${app.route.simplify-tol:0.006}")
+    private double simplifyTol;
 
     private final Map<String, double[]> cityCoords = new HashMap<>();   // 简称 -> [lat,lng]
     private final Map<String, Long> nameToAdcode = new HashMap<>();     // 简称 -> adcode
@@ -50,16 +85,19 @@ public class RouteService {
     private final Map<Long, double[]> adcodeCenter = new HashMap<>();   // adcode -> [lat,lng]
     private final Map<String, List<double[]>> cache = new ConcurrentHashMap<>();
 
-    public RouteService(@Value("${ROUTE_PROVIDER:straight}") String provider,
-                        @Value("${ROUTE_AMAP_KEY:}") String amapKey) {
+    public RouteService(@Value("${app.route.provider:straight}") String provider,
+                        @Value("${app.route.amap-key:}") String amapKey) {
         this.provider = (provider == null ? "straight" : provider.trim().toLowerCase());
         this.amapKey = (amapKey == null ? "" : amapKey.trim());
         loadResources();
     }
 
     @PostConstruct
-    void logProvider() {
-        log.info("[route] 路线烘焙策略={}{}", provider, "amap".equals(provider) ? (amapKey.isBlank() ? "(未配置 Key→退回直线)" : "") : "");
+    void init() {
+        this.http = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(connectTimeoutMs)).build();
+        log.info("[route] 路线烘焙策略={}{}（连接{}ms / 读取{}ms / 抽稀容差{}°）", provider,
+                "amap".equals(provider) ? (amapKey.isBlank() ? "(未配置 Key→退回直线)" : "") : "",
+                connectTimeoutMs, readTimeoutMs, simplifyTol);
     }
 
     /* ===================== 对外 API ===================== */
@@ -163,8 +201,8 @@ public class RouteService {
         double[] last = wps.get(wps.size() - 1);
         if (out.isEmpty() || !same(out.get(out.size() - 1), last)) out.add(last);
         if (out.isEmpty()) return new ArrayList<>(wps);
-        // 烘焙路径要存库+反复渲染：用 Douglas-Peucker 抽稀到屏幕可用密度（~700m 容差）
-        return simplify(out, SIMPLIFY_TOL);
+        // 烘焙路径要存库+反复渲染：用 Douglas-Peucker 抽稀到屏幕可用密度（容差见 app.route.simplify-tol）
+        return simplify(out, simplifyTol);
     }
 
     private List<double[]> fetchSegment(double[] a, double[] b) {
@@ -173,8 +211,8 @@ public class RouteService {
             if ("amap".equals(provider)) seg = fetchAmap(a, b);
             else if ("osrm".equals(provider)) seg = fetchOsrm(a, b);
             else return null;
-            // 高德 QPS 限流 ≤3/s：每段请求后停顿，平滑突发
-            if ("amap".equals(provider)) Thread.sleep(AMAP_SEGMENT_DELAY_MS);
+            // 高德 QPS 限流 ≤3/s：每段请求后停顿，平滑突发（毫秒数见 app.route.amap-segment-delay-ms）
+            if ("amap".equals(provider)) Thread.sleep(amapSegmentDelayMs);
             return seg;
         } catch (Exception e) {
             log.warn("[route] 路段获取失败 {}->{}: {}", a, b, e.getMessage());
@@ -202,22 +240,21 @@ public class RouteService {
         return out;
     }
 
-    /** 高德 WebService QPS 限流：官方限制 ≤3 次/秒，这里取 400ms 留余量（≈2.5 QPS）。 */
-    private static final long AMAP_SEGMENT_DELAY_MS = 400;
-    private static final int AMAP_MAX_TRIES = 5;
+    // 高德 WebService QPS 限流：官方限制 ≤3 次/秒。段间停顿与重试次数已改为可配置，
+    // 见类顶部 app.route.amap-segment-delay-ms / app.route.amap-max-tries。
 
     private List<double[]> fetchAmap(double[] a, double[] b) throws Exception {
         if (amapKey.isBlank()) {
-            log.warn("[route] amap 策略但未配置 ROUTE_AMAP_KEY，退回直线");
+            log.warn("[route] amap 策略但未配置 ROUTE_AMAP_KEY（app.route.amap-key），退回直线");
             return null;
         }
-        for (int t = 1; t <= AMAP_MAX_TRIES; t++) {
+        for (int t = 1; t <= amapMaxTries; t++) {
             String url = "https://restapi.amap.com/v3/direction/driving?key=" + URLEncoder.encode(amapKey, "UTF-8")
                     + "&origin=" + a[0] + "," + a[1] + "&destination=" + b[0] + "," + b[1] + "&extensions=base";
             String body = get(url);
             if (body == null) {
-                log.warn("[route][amap] 第{}/{}次 body=null(HTTP!=200或异常) {}->{}", t, AMAP_MAX_TRIES, a, b);
-                if (t < AMAP_MAX_TRIES) { Thread.sleep(600); continue; }
+                log.warn("[route][amap] 第{}/{}次 body=null(HTTP!=200或异常) {}->{}", t, amapMaxTries, a, b);
+                if (t < amapMaxTries) { Thread.sleep(amapSegmentDelayMs); continue; }
                 return null;
             }
             JsonNode root = om.readTree(body);
@@ -225,9 +262,9 @@ public class RouteService {
                 String info = root.path("info").asText();
                 String infocode = root.path("infocode").asText();
                 // 限流 / 临时错误：退避重试（高德 ≤3 QPS，突发会触 10021）
-                if (t < AMAP_MAX_TRIES && isAmapTransient(infocode)) {
-                    long back = AMAP_SEGMENT_DELAY_MS * t;
-                    log.warn("[route][amap] 临时错误 {} ({}) 第{}/{}次, {}ms 后重试", info, infocode, t, AMAP_MAX_TRIES, back);
+                if (t < amapMaxTries && isAmapTransient(infocode)) {
+                    long back = amapSegmentDelayMs * t;
+                    log.warn("[route][amap] 临时错误 {} ({}) 第{}/{}次, {}ms 后重试", info, infocode, t, amapMaxTries, back);
                     Thread.sleep(back);
                     continue;
                 }
@@ -236,8 +273,8 @@ public class RouteService {
             }
             List<double[]> out = parseAmapPath(root.path("route").path("paths").path(0));
             if (out.isEmpty()) {
-                log.warn("[route][amap] polyline 为空 第{}/{}次 {}->{}", t, AMAP_MAX_TRIES, a, b);
-                if (t < AMAP_MAX_TRIES) { Thread.sleep(400); continue; }
+                log.warn("[route][amap] polyline 为空 第{}/{}次 {}->{}", t, amapMaxTries, a, b);
+                if (t < amapMaxTries) { Thread.sleep(amapSegmentDelayMs); continue; }
                 return null;
             }
             log.info("[route][amap] OK 段 {}->{} 点数={}", a, b, out.size());
@@ -285,7 +322,7 @@ public class RouteService {
     private String get(String url) {
         try {
             java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
-                    .uri(URI.create(url)).timeout(Duration.ofSeconds(5))
+                    .uri(URI.create(url)).timeout(Duration.ofMillis(readTimeoutMs))
                     .header("User-Agent", "travel-screen/1.0").GET().build();
             java.net.http.HttpResponse<String> resp = http.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() != 200) { log.warn("[route] HTTP {} <- {}", resp.statusCode(), url); return null; }
@@ -416,8 +453,7 @@ public class RouteService {
 
     /* ===================== WGS-84 <-> GCJ-02 ===================== */
 
-    /** 烘焙路径抽稀容差（度）。约 0.006° ≈ 700m：保留明显拐弯，去掉道路抖动。 */
-    private static final double SIMPLIFY_TOL = 0.006;
+    // 抽稀容差已改为可配置，见类顶部 app.route.simplify-tol（默认 0.006° ≈ 700m）。
 
     private static final double GCJ_A = 6378245.0;
     private static final double GCJ_EE = 0.00669342162296594323;

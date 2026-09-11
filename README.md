@@ -250,7 +250,25 @@ Docker Hub（`registry-1.docker.io`）在国内直连不稳定，典型症状是
 | `DB_URL` / `DB_USER` / `DB_PASS` | prod 模式 MySQL 连接信息 |
 | `ADMIN_USER` / `ADMIN_PASS` | 默认管理员账号/密码（**请务必修改**） |
 | `AI_API_KEY` / `AI_MODEL` / `AI_VISION_MODEL` | 智谱 GLM 文本/视觉模型 Key 与模型 ID |
+| `AI_RATE_PER_MINUTE` / `AI_RATE_PER_DAY` / `AI_MAX_CONCURRENCY` | AI 调用限流（默认 5 次/分、100 次/天、并发 2） |
+| `ROUTE_PROVIDER` | 路线烘焙策略：`straight`(默认) / `osrm`(免 Key) / `amap` |
+| `ROUTE_AMAP_KEY` | 高德 WebService Key（仅 `ROUTE_PROVIDER=amap` 需要） |
 | `PHOTO_DIR` | 照片存储目录（默认 `./photos`） |
+
+完整变量列表与说明见 [.env.example](.env.example)。
+
+## 外部 API 与限流
+
+本项目**只调用两个外部 API**，且都可以只改配置就换掉厂商：
+
+| API | 现用 | 代码位置 | 限流 |
+|---|---|---|---|
+| AI 行程规划 / 照片识别 | 智谱 GLM（OpenAI 兼容） | `AiPlanService` | `AiRateLimiter`：5 次/分 · 100 次/天 · 并发 2 |
+| 路线烘焙（详细路径地图） | OSRM 公共实例 / 高德 | `RouteService` | 段间停顿 400ms（高德 ≤3 QPS）· 重试退避 · 回填节流 400ms |
+
+端点、鉴权方式、每个限流参数的配置键、以及**换厂商的具体步骤**，见 **[EXTERNAL-APIS.md](EXTERNAL-APIS.md)**。
+
+> 前端零外链：地图底图是离线矢量（369 地级市），无瓦片、无地图 SDK、无 CDN、无统计脚本。
 
 ## 部署
 

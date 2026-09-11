@@ -28,18 +28,41 @@ app:
   admin-pass: ${ADMIN_PASS:admin123}
   session-hours: ${SESSION_HOURS:12}
   default-user-pass: ${DEFAULT_USER_PASS:user123}
+  # ── 外部 API ①：AI 行程规划 / 照片识别（智谱 GLM，OpenAI 兼容协议）──
+  # 换厂商只改 base-url + model + api-key，调用方 AiPlanService 不用动。
+  # 完整清单见仓库根目录 EXTERNAL-APIS.md
   ai:
     enabled: ${AI_ENABLED:true}
+    # OpenAI 兼容的 chat/completions 端点；换 DeepSeek/Kimi/通义等改这一行即可
     base-url: ${AI_BASE_URL:https://open.bigmodel.cn/api/paas/v4/chat/completions}
     api-key: ${AI_API_KEY:}
     model: ${AI_MODEL:glm-4-air}
     vision-model: ${AI_VISION_MODEL:glm-4.6v}
     timeout-ms: ${AI_TIMEOUT_MS:60000}
-    # AI 调用保护（生产是真实付费 Key + demo 账号公开，必须防刷）
+    # ── 限流（AiRateLimiter）：生产挂真实付费 Key 且 demo 账号公开，必须防刷 ──
+    # 按「单 IP」与「单用户」双维度计数，任一超限即拒
     rate-per-minute: ${AI_RATE_PER_MINUTE:5}
     rate-per-day: ${AI_RATE_PER_DAY:100}
+    # 同时并发上限（同步 HTTP 调用很慢，不设会把 Tomcat 线程池打满）
     max-concurrency: ${AI_MAX_CONCURRENCY:2}
+    # 抢不到并发槽位时的排队等待，超时快速失败而不是堆积
     queue-timeout-ms: ${AI_QUEUE_TIMEOUT_MS:3000}
+  # ── 外部 API ②：路线烘焙（大屏详细路径地图）────────────────────────
+  # 完整清单见仓库根目录 EXTERNAL-APIS.md
+  route:
+    # straight | osrm | amap —— osrm 免 Key；amap 中国路网最佳，需 amap-key
+    provider: ${ROUTE_PROVIDER:straight}
+    amap-key: ${ROUTE_AMAP_KEY:}
+    # HTTP 超时
+    connect-timeout-ms: ${ROUTE_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${ROUTE_READ_TIMEOUT_MS:5000}
+    # 限流：高德官方 ≤3 QPS，段间停顿 400ms ≈ 2.5 QPS 留余量
+    amap-segment-delay-ms: ${ROUTE_AMAP_SEGMENT_DELAY_MS:400}
+    amap-max-tries: ${ROUTE_AMAP_MAX_TRIES:5}
+    # 路径抽稀容差（度），默认 0.006° ≈ 700m，越大点越少
+    simplify-tol: ${ROUTE_SIMPLIFY_TOL:0.006}
+    # 启动回填时行程之间的停顿；设 0 可完全不限速
+    backfill-delay-ms: ${ROUTE_BACKFILL_DELAY_MS:400}
   photo-dir: ${PHOTO_DIR:./photos}
 
 # 本地默认：H2 文件库，零运维，可直接 java -jar 跑起来
