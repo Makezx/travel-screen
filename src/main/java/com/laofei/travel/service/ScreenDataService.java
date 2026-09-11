@@ -301,6 +301,7 @@ public class ScreenDataService {
             // 输出 trip
             Map<String, Object> to = new LinkedHashMap<>();
             to.put("id", tid);
+            to.put("nid", t.getId());
             to.put("sheet", t.getSheet());
             to.put("title", t.getTitle());
             to.put("date", t.getDateText());

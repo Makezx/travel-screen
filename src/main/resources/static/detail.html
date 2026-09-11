@@ -47,6 +47,21 @@ table.it{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}.it t
 .userchip a{color:var(--cyan);text-decoration:none;font-size:12px}
 .userchip a.out{color:#ff7a8a}
 @media(max-width:840px){.grid{grid-template-columns:1fr}.list{max-height:none}}
+.aawrap{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.aabtn{align-self:flex-start;font-size:12px;padding:5px 12px;border-radius:9px;border:1px solid var(--line2);
+  background:linear-gradient(92deg,var(--purple),var(--pink));color:#fff;cursor:pointer;font-weight:700;letter-spacing:.04em}
+.aabtn.act{filter:brightness(1.15)}
+.aapanel{margin-top:2px}
+.aahd{font-size:12px;color:var(--tx3);letter-spacing:.5px;margin:8px 0 4px}
+.aatbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+.aatbl th{color:var(--tx3);text-align:right;padding:5px 6px;border-bottom:1px solid var(--line);font-weight:600}
+.aatbl th:first-child,.aatbl td:first-child{text-align:left}
+.aatbl td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05);text-align:right}
+.aatbl .cr{color:var(--green);font-weight:700}.aatbl .db{color:var(--orange);font-weight:700}
+.aax{font-size:12px;line-height:1.9;margin-top:2px}
+.ax{display:flex;gap:6px;align-items:center}
+.ax .am{color:var(--orange);font-weight:700;margin-left:auto}
+.aalk{color:var(--tx2);font-size:12px;padding:4px 0}.aalk.err{color:var(--pink)}
 </style>
 <script>
 (function(){
@@ -154,9 +169,44 @@ function renderList(){
     if(t.items&&t.items.length){h+='<table class="it"><thead><tr><th>项目</th><th>类别</th><th>备注</th><th style="text-align:right">金额</th></tr></thead><tbody>';
       t.items.forEach(function(it){h+='<tr><td class="n">'+esc(it.name||'—')+'</td><td>'+esc(it.cat||'')+'</td><td>'+esc(it.note||'')+'</td><td class="a">'+money(it.amt)+'</td></tr>';});
       h+='</tbody></table>';}
+    h+='<div class="aawrap"><button class="aabtn" data-id="'+t.id+'" data-nid="'+(t.nid!=null?t.nid:'')+'">💸 AA 结算</button><div class="aapanel" id="aapanel-'+(t.nid!=null?t.nid:t.id)+'" data-open="0"></div></div>';
     h+='</div></div>';});
   $('list').innerHTML=h||'<div style="padding:20px;color:#7d6aa8">没有匹配的行程</div>';
-  Array.prototype.forEach.call($('list').querySelectorAll('.trip'),function(el){el.onclick=function(){SEL=el.getAttribute('data-id');renderMap();renderList();};});
+  Array.prototype.forEach.call($('list').querySelectorAll('.trip'),function(el){
+    el.onclick=function(){SEL=el.getAttribute('data-id');renderMap();renderList();};
+    var ab=el.querySelector('.aabtn');if(ab)ab.onclick=function(ev){ev.stopPropagation();doAA(ab.getAttribute('data-nid')||el.getAttribute('data-id'),ab);};
+  });
+}
+function doAA(id, btn){
+  var panel=$('aapanel-'+id);if(!panel)return;
+  var open=panel.getAttribute('data-open')==='1';
+  if(open){panel.setAttribute('data-open','0');panel.innerHTML='';if(btn)btn.classList.remove('act');return;}
+  panel.setAttribute('data-open','1');if(btn)btn.classList.add('act');
+  panel.innerHTML='<div class="aalk">结算中…</div>';
+  fetch('/api/trips/'+id+'/settle',{credentials:'include'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status+(r.status===401?'（未登录）':''));
+    return r.json();
+  }).then(function(d){
+    if(!d||!d.people){panel.innerHTML='<div class="aalk err">返回数据格式异常</div>';return;}
+    var h='<div class="aahd">AA 结算（实付 / 应付 / 净额）</div>';
+    h+='<table class="aatbl"><thead><tr><th>姓名</th><th>实付</th><th>应付</th><th>净额</th></tr></thead><tbody>';
+    d.people.forEach(function(p){
+      var bal=Number(p.balance)||0;
+      var cls=bal>0?'cr':(bal<0?'db':'');
+      var sign=bal>0?'+':(bal<0?'':'');
+      h+='<tr class="'+cls+'"><td>'+esc(p.name)+'</td><td>'+money(p.paid)+'</td><td>'+money(p.share)+'</td><td>'+(sign+bal.toFixed(2))+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    h+='<div class="aahd">最少转账 · 合计 '+money(d.total)+'</div>';
+    var tx=d.transfers||[];
+    if(!tx.length){h+='<div class="aalk">已平账，无需转账 ✅</div>';}
+    else{h+='<div class="aax">';tx.forEach(function(t){
+      h+='<div class="ax"><span>'+esc(t.from)+' <b style="color:var(--tx3)">→</b> '+esc(t.to)+'</span><span class="am">'+money(t.amount)+'</span></div>';
+    });h+='</div>';}
+    panel.innerHTML=h;
+  }).catch(function(e){
+    panel.innerHTML='<div class="aalk err">结算失败：'+(e&&e.message?e.message:e)+'</div>';
+  });
 }
 async function init(){
   var r=await fetch('/api/screen-data');if(r.status===401){location.href='/login';return;}
