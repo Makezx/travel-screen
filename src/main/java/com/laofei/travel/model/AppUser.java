@@ -53,6 +53,15 @@ public class AppUser {
     @Column(name = "must_change_pwd")
     private boolean mustChangePwd = true;
 
+    /**
+     * 是否演示账号。演示账号只能操作「演示工作区」团队（team.is_demo=true）内的数据，
+     * 且不可使用全局导入。判定走这个标记而不是邮箱字符串，
+     * 这样改演示账号的邮箱不会让整套演示隔离失效（B14）。
+     * 由 BootstrapService 启动时按 DEMO_USER 用户名幂等回填。
+     */
+    @Column(name = "is_demo")
+    private boolean isDemo = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -33,6 +33,14 @@ public class Team {
     @Column(name = "is_default")
     private boolean isDefault = false;
 
+    /**
+     * 是否「演示工作区」团队。演示账号只能操作本团队内的数据，
+     * 改演示账号邮箱不会失效（B14：替代原先按 email 字符串硬编码的判定）。
+     * 由 BootstrapService 启动时按 DEMO_TEAM 名称幂等回填。
+     */
+    @Column(name = "is_demo")
+    private boolean isDemo = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

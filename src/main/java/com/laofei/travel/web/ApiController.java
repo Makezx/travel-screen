@@ -1,18 +1,16 @@
 package com.laofei.travel.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.laofei.travel.model.AppUser;
 import com.laofei.travel.model.Permission;
 import com.laofei.travel.model.Trip;
 import com.laofei.travel.model.TripItem;
-import com.laofei.travel.repository.AppUserRepository;
-import com.laofei.travel.repository.TeamRepository;
 import com.laofei.travel.repository.TripItemRepository;
 import com.laofei.travel.repository.TripRepository;
 import com.laofei.travel.repository.TripMemberRepository;
 import com.laofei.travel.service.AiPlanService;
 import com.laofei.travel.service.DataExportService;
 import com.laofei.travel.service.DataImportService;
+import com.laofei.travel.service.DemoScopeService;
 import com.laofei.travel.service.RouteService;
 import com.laofei.travel.service.ScreenDataService;
 import com.laofei.travel.service.SettleService;
@@ -49,22 +47,20 @@ public class ApiController {
     private final DataExportService exportSvc;
     private final AiPlanService aiSvc;
     private final TeamService teamSvc;
-    private final AppUserRepository userRepo;
-    private final TeamRepository teamRepo;
     private final ObjectMapper om;
     private final SecuritySupport sec;
     private final TripAccessService tripAccess;
     private final TripService tripSvc;
     private final TripMemberRepository memberRepo;
     private final SettleService settleSvc;
+    private final DemoScopeService demoScope;
     private final TransactionTemplate txTemplate;
 
     public ApiController(TripRepository tripRepo, TripItemRepository itemRepo, ScreenDataService screenSvc,
                          RouteService routeSvc, DataImportService importSvc, DataExportService exportSvc, AiPlanService aiSvc, TeamService teamSvc,
-                         AppUserRepository userRepo, TeamRepository teamRepo,
                          ObjectMapper om, SecuritySupport sec, TripAccessService tripAccess,
                          TripService tripSvc, TripMemberRepository memberRepo, SettleService settleSvc,
-                         PlatformTransactionManager txm) {
+                         DemoScopeService demoScope, PlatformTransactionManager txm) {
         this.tripRepo = tripRepo;
         this.itemRepo = itemRepo;
         this.screenSvc = screenSvc;
@@ -73,14 +69,13 @@ public class ApiController {
         this.exportSvc = exportSvc;
         this.aiSvc = aiSvc;
         this.teamSvc = teamSvc;
-        this.userRepo = userRepo;
-        this.teamRepo = teamRepo;
         this.om = om;
         this.sec = sec;
         this.tripAccess = tripAccess;
         this.tripSvc = tripSvc;
         this.memberRepo = memberRepo;
         this.settleSvc = settleSvc;
+        this.demoScope = demoScope;
         this.txTemplate = new TransactionTemplate(txm);
     }
 
@@ -90,13 +85,12 @@ public class ApiController {
     }
 
     /**
-     * 需求7安全过渡：演示账号 demo@travel.cn 只能查看/编辑其归属的「示例·演示」团队数据，
-     * 不可触碰真实团队行程。返回演示团队ID或 null(非演示用户)。
+     * 需求7安全过渡：演示账号只能查看/编辑「演示工作区」团队（team.is_demo=true）的数据，
+     * 不可触碰真实团队行程。返回演示团队 ID，非演示用户返回 null。
+     * B14：判定改为读 DB 标记（见 DemoScopeService），不再按邮箱字符串硬编码。
      */
     private Long demoTeamId() {
-        String principal = sec.principal();
-        if (principal == null || !principal.equals("demo@travel.cn")) return null;
-        return teamRepo.findByName("示例·演示").map(t -> t.getId()).orElse(null);
+        return demoScope.demoTeamId(sec.principal());
     }
 
     @GetMapping("/screen-data")
@@ -200,9 +194,9 @@ public class ApiController {
         }
         // 叶子行程删除 —— 原有级联逻辑
         // 权限校验（只读，可能抛异常）——置于事务之外，避免异常把删除事务标记为 rollback-only
-        boolean global = false;
-        try { sec.require(Permission.MANAGE_TRIP); global = true; } catch (Exception ignored) { }
-        if (!global && target.getParentId() != null && !tripAccess.canEdit(target.getParentId(), sec.principal())) {
+        // B5：不再用「全局 MANAGE_TRIP」放行 —— EDITOR 角色自带该权限，放行等于越权洞没堵。
+        // 统一交给下面的 assertTripWritable（活动角色 / 创建人 / 系统管理员）。
+        if (target.getParentId() != null && !tripAccess.canEdit(target.getParentId(), sec.principal())) {
             throw new ForbiddenException("无权删除该行程，需该行程的编辑者身份");
         }
         Long demoT = demoTeamId();
@@ -211,7 +205,7 @@ public class ApiController {
         }
         // 级联删除在独立事务中执行（避免权限校验异常把事务标记为 rollback-only；且自调用不走 AOP 代理，故用 TransactionTemplate）
         txTemplate.execute(status -> {
-            assertTripWritable(id); // V3：活动内行程需该活动编辑权；未挂活动则放行（团队级）
+            assertTripWritable(id); // B5：活动内行程需该活动编辑权；顶层行程校验自身编辑权或创建人
             itemRepo.deleteByTripId(id);
             tripRepo.deleteById(id);
             return null;
@@ -309,14 +303,17 @@ public class ApiController {
         assertTripWritable(tripId);
     }
 
-    /** V3：演示作用域 + 活动编辑权双重校验（明细/行程写操作统一入口） */
+    /**
+     * V3：演示作用域 + 写权限双重校验（明细 / 删除行程的统一入口）。
+     * B5：修复「顶层行程（parentId 为 null）完全不校验」的越权——此前任何登录用户
+     * 都能跨团队给别人的未分组行程加明细、传照片。现在统一交给
+     * {@link TripAccessService#requireWritable}：子行程沿用父层编辑权，顶层行程校验自身编辑权。
+     */
     private void assertTripWritable(Long tripId) {
-        Long demoT = demoTeamId();
+        String principal = sec.principal();
         Trip t = tripRepo.findById(tripId).orElseThrow(() -> new NotFoundException("not found"));
-        if (demoT != null && !demoT.equals(t.getTeamId())) {
-            throw new ForbiddenException("演示账号只能操作演示团队的行程");
-        }
-        if (t.getParentId() != null) assertTripEditable(t.getParentId());
+        demoScope.assertInDemoScope(t, principal);
+        tripAccess.requireWritable(tripId, principal);
     }
 
     /**
@@ -351,7 +348,8 @@ public class ApiController {
     public Map<String, Object> importXlsx(@RequestParam("file") MultipartFile file,
                                           @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun) throws Exception {
         sec.requireLogin();
-        if (demoTeamId() != null) {
+        // 演示账号一律禁止全局导入（会清空真实数据）；按 DB 标记判定，不依赖邮箱
+        if (demoScope.isDemoUser(sec.principal())) {
             throw new ForbiddenException("演示账号不可使用全局导入（会清空真实数据）");
         }
         // 全局导入会清空全部真实数据，仅授权「数据维护」（MANAGE_TRIP）者可用

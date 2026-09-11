@@ -15,4 +15,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     /** 种子默认团队 */
     Optional<Team> findFirstByIsDefaultTrue();
+
+    /** 演示工作区团队（is_demo=true）；按此判定而非团队名，改名不会失效 */
+    Optional<Team> findFirstByIsDemoTrue();
 }

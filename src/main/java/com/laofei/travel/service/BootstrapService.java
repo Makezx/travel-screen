@@ -235,29 +235,45 @@ public class BootstrapService implements CommandLineRunner {
             t.setName(DEMO_TEAM);
             t.setDescription("演示工作区 · 任何人可用 demo@travel.cn 登录在此增删改，不影响真实团队数据");
             t.setDefault(false);
+            t.setDemo(true);
             Team saved = teamRepo.save(t);
             System.out.println("[bootstrap] 已创建演示团队 " + DEMO_TEAM);
             return saved;
         });
+        // B14：演示标记改为 DB 列（team.is_demo / app_user.is_demo），启动时幂等回填，
+        // 保证在 B14 之前就存在的库也能拿到标记 —— 否则演示隔离会静默失效。
+        if (!demo.isDemo()) {
+            demo.setDemo(true);
+            demo = teamRepo.save(demo);
+            System.out.println("[bootstrap] 已回填演示团队标记 is_demo=true: " + DEMO_TEAM);
+        }
 
         // 仅在演示团队完全无行程时灌入示例数据（幂等：已有则跳过）
         if (tripRepo.findByTeamId(demo.getId()).isEmpty()) {
             seedDemoTrips(demo.getId());
         }
 
-        // demo 账号
-        if (userRepo.findByUsername(DEMO_USER).isEmpty()) {
+        // demo 账号：不存在则创建；已存在则幂等补 is_demo 标记
+        final Team demoTeam = demo;
+        AppUser demoUser = userRepo.findByUsername(DEMO_USER).orElseGet(() -> {
             AppUser u = new AppUser();
             u.setUsername(DEMO_USER);
             u.setDisplayName("演示账号");
             u.setPassword(pwd.hash("Demo@2026"));
             u.setEnabled(true);
             u.setMustChangePwd(false);
-            u.getTeams().add(demo);
+            u.setDemo(true);
+            u.getTeams().add(demoTeam);
             Role editor = roleRepo.findByCode("EDITOR").orElse(null);
             if (editor != null) u.getRoles().add(editor);
-            userRepo.save(u);
+            AppUser saved = userRepo.save(u);
             System.out.println("[bootstrap] 已创建演示账号 " + DEMO_USER + " (Demo@2026, EDITOR, 归属演示团队)");
+            return saved;
+        });
+        if (!demoUser.isDemo()) {
+            demoUser.setDemo(true);
+            userRepo.save(demoUser);
+            System.out.println("[bootstrap] 已回填演示账号标记 is_demo=true: " + DEMO_USER);
         }
     }
 

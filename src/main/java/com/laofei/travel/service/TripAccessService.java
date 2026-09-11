@@ -126,6 +126,34 @@ public class TripAccessService {
         return t;
     }
 
+    /**
+     * 写操作（明细 / 照片 / 删除等）统一校验 —— 修复 B5 越权。
+     * <ul>
+     *   <li>子行程（parentId 非 null）→ 沿用父层（活动）的编辑权；</li>
+     *   <li>顶层行程（parentId 为 null）→ 校验<b>该行程自身</b>的编辑权。</li>
+     * </ul>
+     * 修复前：顶层行程<b>完全不校验</b>，任何登录用户都能跨团队给别人的行程加明细、传照片。
+     * <p>
+     * ⚠️ 这里<b>不能</b>用「全局 MANAGE_TRIP」兜底：预置角色 EDITOR 自带 MANAGE_TRIP
+     * （见 {@link Permission#defaultsFor}），而演示账号、团队成员默认都是 EDITOR，
+     * 一旦放行等于 B5 白修 —— 任何 EDITOR 仍能跨团队写任意行程。
+     * 因此全局放行只保留给<b>系统管理员</b>（文件式 admin，或拥有 MANAGE_TEAM / MANAGE_USER），
+     * 该判定已内置在 {@link #canEdit} → {@link #isSysAdmin}。
+     * <p>
+     * 另补「创建人」放行：未挂活动的独立行程没有成员表记录，非成员同团队只能落到 MEMBER（只读），
+     * 若不看 createdBy，创建者反而改不了自己刚建的行程。
+     */
+    public void requireWritable(Long tripId, String username) {
+        if (username == null) throw new UnauthorizedException();
+        Trip t = tripRepo.findById(tripId).orElseThrow(() -> new NotFoundException("行程不存在"));
+        Long targetId = t.getParentId() != null ? t.getParentId() : t.getId();
+        if (canEdit(targetId, username)) return;                 // 活动角色（含系统管理员全放行）
+        if (username.equals(t.getCreatedBy())) return;           // 自己创建的行程
+        throw new ForbiddenException(t.getParentId() != null
+                ? "无权编辑该行程内的子行程，需编辑者及以上角色"
+                : "无权编辑该行程，需编辑者及以上角色");
+    }
+
     /* ---------------- 内部 ---------------- */
 
     private void requireLogin(String username) {

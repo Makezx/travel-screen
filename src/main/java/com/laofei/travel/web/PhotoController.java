@@ -2,10 +2,10 @@ package com.laofei.travel.web;
 
 import com.laofei.travel.model.Trip;
 import com.laofei.travel.model.TripPhoto;
-import com.laofei.travel.repository.TeamRepository;
 import com.laofei.travel.repository.TripPhotoRepository;
 import com.laofei.travel.repository.TripRepository;
 import com.laofei.travel.service.AiPlanService;
+import com.laofei.travel.service.DemoScopeService;
 import com.laofei.travel.service.TripAccessService;
 import com.laofei.travel.web.SecuritySupport;
 import org.springframework.http.MediaType;
@@ -37,19 +37,19 @@ public class PhotoController {
 
     private final TripPhotoRepository photoRepo;
     private final TripRepository tripRepo;
-    private final TeamRepository teamRepo;
     private final TripAccessService tripAccess;
+    private final DemoScopeService demoScope;
     private final SecuritySupport sec;
     private final AiPlanService aiSvc;
     private final Path photoDir;
 
-    public PhotoController(TripPhotoRepository photoRepo, TripRepository tripRepo, TeamRepository teamRepo,
-                           TripAccessService tripAccess, SecuritySupport sec, AiPlanService aiSvc,
-                           Path photoDirPath) {
+    public PhotoController(TripPhotoRepository photoRepo, TripRepository tripRepo,
+                           TripAccessService tripAccess, DemoScopeService demoScope, SecuritySupport sec,
+                           AiPlanService aiSvc, Path photoDirPath) {
         this.photoRepo = photoRepo;
         this.tripRepo = tripRepo;
-        this.teamRepo = teamRepo;
         this.tripAccess = tripAccess;
+        this.demoScope = demoScope;
         this.sec = sec;
         this.aiSvc = aiSvc;
         this.photoDir = photoDirPath;
@@ -124,19 +124,17 @@ public class PhotoController {
 
     /* ---------------- 内部工具 ---------------- */
 
-    /** 写操作权限：演示账号作用域 + 活动编辑权（与 ApiController.assertTripWritable 同一套口径） */
+    /**
+     * 写操作权限：演示账号作用域 + 写权限。
+     * B5/B14：与 ApiController.assertTripWritable 走完全同一套
+     * （{@link TripAccessService#requireWritable} + {@link DemoScopeService}）——
+     * 顶层行程（parentId 为 null）不再「无校验放行」，演示判定也不再按邮箱硬编码。
+     */
     private void assertPhotoWritable(Long tripId) {
-        Trip t = tripRepo.findById(tripId).orElseThrow(() -> new NotFoundException("not found"));
         String principal = sec.principal();
-        if (principal != null && principal.equals("demo@travel.cn")) {
-            Long demoT = teamRepo.findByName("示例·演示").map(tm -> tm.getId()).orElse(null);
-            if (demoT != null && !demoT.equals(t.getTeamId())) {
-                throw new ForbiddenException("演示账号只能操作演示团队的行程");
-            }
-        }
-        if (t.getParentId() != null && !tripAccess.canEdit(t.getParentId(), principal)) {
-            throw new ForbiddenException("无权编辑该行程的照片，需编辑者及以上角色");
-        }
+        Trip t = tripRepo.findById(tripId).orElseThrow(() -> new NotFoundException("not found"));
+        demoScope.assertInDemoScope(t, principal);
+        tripAccess.requireWritable(tripId, principal);
     }
 
     /** 图片校验：非空 + Content-Type 白名单 + 大小上限 10MB */
