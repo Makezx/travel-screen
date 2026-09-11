@@ -57,6 +57,14 @@ public class Trip {
     @Column(name = "notes_json", columnDefinition = "TEXT")
     private String notesJson = "[]";
 
+    /**
+     * 烘焙后的路线密集坐标（沿真实道路的 [lng,lat][]，JSON 字符串）。
+     * null/空 = 未烘焙，渲染时退回「城市中心对中心」直线。
+     * 由 RouteService 在行程保存 / 启动时回填，避免每次大屏加载都调地图 API。
+     */
+    @Column(name = "path_json", columnDefinition = "TEXT")
+    private String pathJson;
+
     /** 合计金额（计划行程可为空） */
     @Column(name = "total")
     private Double total;

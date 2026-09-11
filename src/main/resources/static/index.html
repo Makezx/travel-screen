@@ -14,6 +14,9 @@
   --g1:rgba(155,107,255,.28); --g2:rgba(255,95,162,.22); --g3:rgba(70,230,255,.18);
   --cat-eat:#46e6ff; --cat-stay:#5cf2a8; --cat-go:#ff8a4e; --cat-ticket:#ffb14e; --cat-other:#9b6bff;
 }
+/* 路线流动动画：沿真实道路的折线带流动虚线，体现行进方向 */
+@keyframes rtflow{to{stroke-dashoffset:-240}}
+.rt-flow{stroke-dasharray:5 7;animation:rtflow 3s linear infinite}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);overflow:auto}
 body{
@@ -570,8 +573,10 @@ function renderRoute(){
     drawCityLabels(litCityNames(),8,500); // 默认总览/选中行程无路线：标已点亮城市
   }
   else{var d='';for(var i2=0;i2<t.path.length;i2++)d+=(i2?'L':'M')+PX(t.path[i2][0]).toFixed(1)+' '+PY(t.path[i2][1]).toFixed(1);
-    g.innerHTML='<path d="'+d+'" fill="none" stroke="#ff5fa2" stroke-width="1.6" stroke-opacity=".9"/><path d="'+d+'" fill="none" stroke="#fff" stroke-width=".6" stroke-dasharray="4 4" stroke-opacity=".7"/>';
-    var dots='';for(i2=0;i2<t.path.length;i2++){dots+='<circle cx="'+PX(t.path[i2][0]).toFixed(1)+'" cy="'+PY(t.path[i2][1]).toFixed(1)+'" r="3" fill="#ffd166"/>';if(i2===0||i2===t.path.length-1)dots+='<circle cx="'+PX(t.path[i2][0]).toFixed(1)+'" cy="'+PY(t.path[i2][1]).toFixed(1)+'" r="5" fill="#ff5fa2" stroke="#fff" stroke-width="1"/>';}
+    g.innerHTML='<path d="'+d+'" fill="none" stroke="#ff5fa2" stroke-width="1.6" stroke-opacity=".9"/><path class="rt-flow" d="'+d+'" fill="none" stroke="#fff" stroke-width=".6" stroke-opacity=".75"/>';
+    var dots='';var pa0=t.path[0],pa1=t.path[t.path.length-1];
+    dots+='<circle cx="'+PX(pa0[0]).toFixed(1)+'" cy="'+PY(pa0[1]).toFixed(1)+'" r="5" fill="#ff5fa2" stroke="#fff" stroke-width="1"/>';
+    dots+='<circle cx="'+PX(pa1[0]).toFixed(1)+'" cy="'+PY(pa1[1]).toFixed(1)+'" r="5" fill="#fff" stroke="#ff5fa2" stroke-width="1.5"/>';
     p.innerHTML=dots;
     // 单程：标注途经城市（去重）
     var seen={},ns=(t.cities||[]).filter(function(x){if(seen[x])return false;seen[x]=1;return true;});
@@ -595,9 +600,22 @@ function renderAllRoutes(){
     var a0=path[0],a1=path[path.length-1];
     hPt+='<circle cx="'+PX(a0[0]).toFixed(1)+'" cy="'+PY(a0[1]).toFixed(1)+'" r="3" fill="'+color+'" stroke="#0b0a1f" stroke-width=".6"/>';
     hPt+='<circle cx="'+PX(a1[0]).toFixed(1)+'" cy="'+PY(a1[1]).toFixed(1)+'" r="3.4" fill="'+color+'" stroke="#fff" stroke-width=".8"/>';
-    for(k=0;k<path.length-1;k++){
-      var pa=path[k],pb=path[k+1],mx=(PX(pa[0])+PX(pb[0]))/2,my=(PY(pa[1])+PY(pb[1]))/2,mode=legMode(havDist(pa,pb));
-      hPt+='<g transform="translate('+(mx-9).toFixed(1)+','+(my-9).toFixed(1)+') scale(0.75)" pointer-events="none"><path d="'+MODE_GLYPH[mode]+'" fill="'+color+'" stroke="#0b0a1f" stroke-width="1" stroke-linejoin="round"/></g>';
+    // 交通方式图标：按「城市对城市」的腿画（waypoints），而不是对密集 path 逐点画，
+    // 否则烘焙后几百个顶点会叠成一坨方块。
+    var wps=(t.waypoints&&t.waypoints.length>1)?t.waypoints:null;
+    if(wps){
+      for(k=0;k<wps.length-1;k++){
+        var pa=wps[k],pb=wps[k+1],mx=(PX(pa[0])+PX(pb[0]))/2,my=(PY(pa[1])+PY(pb[1]))/2,mode=legMode(havDist(pa,pb));
+        hPt+='<g transform="translate('+(mx-9).toFixed(1)+','+(my-9).toFixed(1)+') scale(0.75)" pointer-events="none"><path d="'+MODE_GLYPH[mode]+'" fill="'+color+'" stroke="#0b0a1f" stroke-width="1" stroke-linejoin="round"/></g>';
+      }
+    }else if(path.length>1){
+      // 兜底（老数据无 waypoints）：沿线均匀取 ≤5 个点放图标
+      var step=Math.max(1,Math.floor((path.length-1)/5));
+      for(k=0;k<path.length-1;k+=step){
+        var pb2=path[Math.min(k+step,path.length-1)],pa2=path[k];
+        var mx2=(PX(pa2[0])+PX(pb2[0]))/2,my2=(PY(pa2[1])+PY(pb2[1]))/2,mode2=legMode(havDist(pa2,pb2));
+        hPt+='<g transform="translate('+(mx2-9).toFixed(1)+','+(my2-9).toFixed(1)+') scale(0.75)" pointer-events="none"><path d="'+MODE_GLYPH[mode2]+'" fill="'+color+'" stroke="#0b0a1f" stroke-width="1" stroke-linejoin="round"/></g>';
+      }
     }
     legend+='<div class="ri" data-t="'+t.id+'"><span class="sw" style="background:'+color+'"></span><span class="rt">'+esc(t.title)+'</span><span class="rn">'+esc(t.date||'')+'</span></div>';
   }

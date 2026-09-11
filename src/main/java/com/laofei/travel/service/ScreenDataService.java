@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 public class ScreenDataService {
 
     private final TripRepository tripRepo;
+    private final RouteService routeService;
     private final TripItemRepository itemRepo;
     private final TeamRepository teamRepo;
     private final TripPhotoRepository photoRepo;
@@ -267,16 +268,24 @@ public class ScreenDataService {
 
             // route / path
             List<Long> route = new ArrayList<>();
-            List<double[]> path = new ArrayList<>();
+            List<double[]> path;
             Set<Long> tripAdcodes = new LinkedHashSet<>();
             for (String cname : asList(t.getCitiesJson())) {
                 Long ad = nameToAdcode.get(cname);
                 if (ad != null) { route.add(ad); tripAdcodes.add(ad); }
                 else unresolved.add(cname); // geo 底图查不到 → 不亮不连线，前端据此提示
-                // 坐标：景区/县名在坐标表里通常没有，回退所属地级市中心点，保证路线能连上
-                double[] xy = cityCoords.get(cname);
-                if (xy == null && ad != null) xy = findCoord(ad);
-                if (xy != null) path.add(new double[]{xy[1], xy[0]}); // [lng,lat]
+            }
+            // 路线坐标：优先用已烘焙的真实道路 pathJson；缺失则退回城市中心对中心直线
+            String baked = t.getPathJson();
+            if (baked != null && !baked.isBlank()) {
+                path = RouteService.parsePathJson(baked);
+            } else {
+                path = new ArrayList<>();
+                for (String cname : asList(t.getCitiesJson())) {
+                    double[] xy = cityCoords.get(cname);
+                    if (xy == null) { Long ad = nameToAdcode.get(cname); if (ad != null) xy = findCoord(ad); }
+                    if (xy != null) path.add(new double[]{xy[1], xy[0]}); // [lng,lat]
+                }
             }
 
             // lit 累计（仅已完成）
@@ -315,6 +324,8 @@ public class ScreenDataService {
             to.put("cats", cats);
             to.put("route", route);
             to.put("path", path);
+            // 途经城市控制点 [lng,lat]：前端据此在每段中点画一个交通方式图标（避免对密集 path 逐点画）
+            to.put("waypoints", routeService.waypointsForCities(asList(t.getCitiesJson())));
             to.put("notes", asList(t.getNotesJson()));
             List<Map<String, Object>> itemsOut = new ArrayList<>();
             for (TripItem it : items) {
@@ -529,14 +540,13 @@ public class ScreenDataService {
             }
 
             List<Long> route = new ArrayList<>();
-            List<double[]> path = new ArrayList<>();
             Set<Long> tripAdcodes = new LinkedHashSet<>();
             for (String c : cities) {
                 Long ad = nameToAdcode.get(c);
                 if (ad != null) { route.add(ad); tripAdcodes.add(ad); }
-                double[] xy = cityCoords.get(c);
-                if (xy != null) path.add(new double[]{xy[1], xy[0]});
             }
+            // 示例行程路线：用 RouteService 展开真实道路（带缓存；无 Key 时退回直线）
+            List<double[]> path = routeService.denseForCities(cities);
             if (done) {
                 double share = n > 0 ? r2(cost / n) : 0;
                 for (Long ad : tripAdcodes) {
@@ -569,6 +579,7 @@ public class ScreenDataService {
             to.put("cats", cats);
             to.put("route", route);
             to.put("path", path);
+            to.put("waypoints", routeService.waypointsForCities(cities));
             to.put("notes", List.of("演示用脱敏示例数据"));
             to.put("items", itemsOut);
             tripsOut.add(to);

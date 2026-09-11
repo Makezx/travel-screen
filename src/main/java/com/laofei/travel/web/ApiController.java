@@ -13,6 +13,7 @@ import com.laofei.travel.repository.TripMemberRepository;
 import com.laofei.travel.service.AiPlanService;
 import com.laofei.travel.service.DataExportService;
 import com.laofei.travel.service.DataImportService;
+import com.laofei.travel.service.RouteService;
 import com.laofei.travel.service.ScreenDataService;
 import com.laofei.travel.service.SettleService;
 import com.laofei.travel.service.TeamService;
@@ -43,6 +44,7 @@ public class ApiController {
     private final TripRepository tripRepo;
     private final TripItemRepository itemRepo;
     private final ScreenDataService screenSvc;
+    private final RouteService routeSvc;
     private final DataImportService importSvc;
     private final DataExportService exportSvc;
     private final AiPlanService aiSvc;
@@ -58,7 +60,7 @@ public class ApiController {
     private final TransactionTemplate txTemplate;
 
     public ApiController(TripRepository tripRepo, TripItemRepository itemRepo, ScreenDataService screenSvc,
-                         DataImportService importSvc, DataExportService exportSvc, AiPlanService aiSvc, TeamService teamSvc,
+                         RouteService routeSvc, DataImportService importSvc, DataExportService exportSvc, AiPlanService aiSvc, TeamService teamSvc,
                          AppUserRepository userRepo, TeamRepository teamRepo,
                          ObjectMapper om, SecuritySupport sec, TripAccessService tripAccess,
                          TripService tripSvc, TripMemberRepository memberRepo, SettleService settleSvc,
@@ -66,6 +68,7 @@ public class ApiController {
         this.tripRepo = tripRepo;
         this.itemRepo = itemRepo;
         this.screenSvc = screenSvc;
+        this.routeSvc = routeSvc;
         this.importSvc = importSvc;
         this.exportSvc = exportSvc;
         this.aiSvc = aiSvc;
@@ -159,6 +162,7 @@ public class ApiController {
             if (parent != null) t.setTeamId(parent.getTeamId());
         }
         recompute(t);
+        bakeRoute(t);
         Trip saved = tripRepo.save(t);
         return toLight(saved);
     }
@@ -182,6 +186,7 @@ public class ApiController {
         applyBody(t, body);
         if (demoT != null) t.setTeamId(demoT);
         recompute(t);
+        bakeRoute(t);
         return toLight(tripRepo.save(t));
     }
 
@@ -314,6 +319,19 @@ public class ApiController {
         if (t.getParentId() != null) assertTripEditable(t.getParentId());
     }
 
+    /**
+     * 保存前烘焙路线：用城市序列展开真实道路，写入 pathJson（供大屏沿路渲染）。
+     * 最佳努力——API 超时/失败只记录日志，保留原值（或退回直线），绝不阻断保存。
+     */
+    private void bakeRoute(Trip t) {
+        try {
+            String json = routeSvc.bakeForTrip(t);
+            if (json != null) t.setPathJson(json);
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(ApiController.class).warn("[route] 烘焙行程#{} 路线失败: {}", t.getId(), e.getMessage());
+        }
+    }
+
     @PutMapping("/trips/{id}/recompute")
     public Map<String, Object> recomputeEndpoint(@PathVariable Long id) {
         recompute(tripRepo.findById(id).orElseThrow());
@@ -376,6 +394,7 @@ public class ApiController {
         t.setN(body.get("n") == null ? 0 : (Integer) body.get("n"));
         t.setCitiesJson(toJson(body.get("cities")));
         t.setNotesJson(toJson(body.get("notes")));
+        bakeRoute(t);
         Trip saved = tripRepo.save(t);
         return toLight(saved);
     }
