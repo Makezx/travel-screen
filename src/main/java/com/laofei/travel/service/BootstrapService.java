@@ -58,6 +58,7 @@ public class BootstrapService implements CommandLineRunner {
     private final PasswordService pwd;
     private final TripService tripSvc;
     private final TripMemberRepository tripMemberRepo;
+    private final RouteService routeSvc;
     private final ActivityRepository actRepo;
     private final ActivityMemberRepository actMemberRepo;
     private final SchemaMigrationRepository migrationRepo;
@@ -80,6 +81,40 @@ public class BootstrapService implements CommandLineRunner {
             migrationRepo.save(new SchemaMigration(MIGRATION_V3_ACTIVITY_MERGE, Instant.now()));
         }
         System.out.println("[bootstrap] 种子团队/角色就绪：" + SEED_TEAM);
+        // 路线回填：后台线程执行，避免拖慢启动；首屏由大屏读取 pathJson，缺失则退回直线
+        new Thread(this::backfillRoutes, "route-backfill").start();
+    }
+
+    /**
+     * 启动后回填所有行程的 pathJson（沿真实道路的密集坐标）。
+     * 幂等：已有 pathJson 的跳过；单条失败不影响其余；无 Key/API 不可达则保留 null（直线兜底）。
+     */
+    private void backfillRoutes() {
+        try {
+            List<Trip> all = tripRepo.findAll();
+            int done = 0, skip = 0, fail = 0;
+            for (Trip t : all) {
+                if (t.getPathJson() != null && !t.getPathJson().isBlank()) { skip++; continue; }
+                try {
+                    String json = routeSvc.bakeForTrip(t);
+                    if (json != null && !json.isBlank()) {
+                        t.setPathJson(json);
+                        tripRepo.save(t);
+                        done++;
+                    } else {
+                        skip++;
+                    }
+                } catch (Exception e) {
+                    fail++;
+                    System.out.println("[route-backfill] 行程#" + t.getId() + " 跳过: " + e.getMessage());
+                }
+                // 礼貌节流：高德 QPS 限流 ≤3/s，行程间再留 400ms 余量（段内另有 400ms 停顿）
+                try { Thread.sleep(400); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+            }
+            System.out.println("[route-backfill] 完成：烘焙=" + done + " 跳过=" + skip + " 失败=" + fail + " 共=" + all.size());
+        } catch (Exception e) {
+            System.out.println("[route-backfill] 回填异常终止: " + e.getMessage());
+        }
     }
 
     /**
